@@ -54,13 +54,21 @@ router.post('/register', async (_req, res) => {
 // Visit: https://kararspace-production.up.railway.app/api/auth/setup
 router.get('/setup', async (_req, res) => {
   try {
+    // First, test database connection
+    await prisma.$connect();
+    console.log('Database connected successfully');
+
     const existingAdmin = await prisma.admin.findFirst();
     if (existingAdmin) {
-      return res.send('Admin already exists. Setup not needed.');
+      return res.send(`
+        <h1>Admin already exists</h1>
+        <p>Email: ${existingAdmin.email}</p>
+        <p>Setup not needed.</p>
+      `);
     }
 
     const hashedPassword = await bcrypt.hash('KararAdmin2024!', 12);
-    await prisma.admin.create({
+    const newAdmin = await prisma.admin.create({
       data: {
         email: 'addfgh177@gmail.com',
         password: hashedPassword,
@@ -68,16 +76,47 @@ router.get('/setup', async (_req, res) => {
       },
     });
 
+    console.log('Admin created:', newAdmin.id);
+
     res.send(`
       <h1>Admin account created!</h1>
       <p>Email: addfgh177@gmail.com</p>
       <p>Password: KararAdmin2024!</p>
+      <p>Admin ID: ${newAdmin.id}</p>
       <p><strong>Change your password after logging in!</strong></p>
       <p><a href="https://admin.kararspace.com">Go to Admin Dashboard</a></p>
     `);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Setup error:', error);
-    res.status(500).send('Setup failed');
+    res.status(500).send(`
+      <h1>Setup failed</h1>
+      <p>Error: ${error.message}</p>
+      <p>Code: ${error.code || 'N/A'}</p>
+      <pre>${JSON.stringify(error, null, 2)}</pre>
+    `);
+  }
+});
+
+// Debug endpoint - check database status
+router.get('/debug', async (_req, res) => {
+  try {
+    await prisma.$connect();
+    const adminCount = await prisma.admin.count();
+    const admins = await prisma.admin.findMany({ select: { id: true, email: true, name: true } });
+    
+    res.json({
+      connected: true,
+      adminCount,
+      admins,
+      databaseUrl: process.env.DATABASE_URL ? 'Set (hidden)' : 'NOT SET',
+      jwtSecret: process.env.JWT_SECRET ? 'Set' : 'NOT SET',
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      connected: false,
+      error: error.message,
+      code: error.code,
+    });
   }
 });
 
