@@ -2,11 +2,9 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 export function LoginPage() {
-  const { login, register } = useAuth();
-  const [isRegister, setIsRegister] = useState(false);
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -16,11 +14,7 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      if (isRegister) {
-        await register(email, password, name);
-      } else {
-        await login(email, password);
-      }
+      await login(email, password);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -37,19 +31,6 @@ export function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {isRegister && (
-            <div>
-              <label className="block text-sm text-zinc-400 mb-2">Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:border-zinc-600 transition"
-                placeholder="Your name"
-              />
-            </div>
-          )}
-
           <div>
             <label className="block text-sm text-zinc-400 mb-2">Email</label>
             <input
@@ -85,15 +66,7 @@ export function LoginPage() {
             disabled={loading}
             className="w-full py-3 bg-white text-black font-medium rounded-lg hover:bg-zinc-200 transition disabled:opacity-50"
           >
-            {loading ? 'Loading...' : isRegister ? 'Create Account' : 'Sign In'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsRegister(!isRegister)}
-            className="w-full text-sm text-zinc-500 hover:text-white transition"
-          >
-            {isRegister ? 'Already have an account? Sign in' : 'First time? Create an account'}
+            {loading ? 'Loading...' : 'Sign In'}
           </button>
         </form>
       </div>

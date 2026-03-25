@@ -45,38 +45,9 @@ router.post('/logout', (req, res) => {
   res.json({ success: true });
 });
 
-// Register (only works if no admin exists)
-router.post('/register', async (req, res) => {
-  try {
-    const existingAdmin = await prisma.admin.findFirst();
-    if (existingAdmin) {
-      return res.status(403).json({ error: 'Admin already exists' });
-    }
-
-    const { email, password, name } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    const admin = await prisma.admin.create({
-      data: { email, password: hashedPassword, name },
-    });
-
-    const token = generateToken(admin.id);
-
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    res.json({ 
-      success: true, 
-      admin: { id: admin.id, email: admin.email, name: admin.name } 
-    });
-  } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({ error: 'Registration failed' });
-  }
+// Register - DISABLED for security
+router.post('/register', async (_req, res) => {
+  return res.status(403).json({ error: 'Registration is disabled' });
 });
 
 // Check auth status
