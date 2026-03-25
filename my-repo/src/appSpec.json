@@ -1,0 +1,227 @@
+{
+  "id": "5c8fe835-ea22-4635-b8ff-433e945c4093",
+  "initialPrompt": "Create a website inspired by https://calnewport.com/",
+  "siteName": "calnewport.com",
+  "brandBook": {
+    "tones": [
+      "academic",
+      "reflective",
+      "curious",
+      "disciplined",
+      "insightful"
+    ],
+    "designStyle": {
+      "primaryStyle": [
+        "Minimalist",
+        "Content-First",
+        "Intellectual"
+      ],
+      "supportingStyles": [
+        "Calm",
+        "Academic",
+        "Modern"
+      ]
+    },
+    "toneOfVoice": "Calm, intellectual, precise, reflective, and deeply thoughtful. The tone should convey expertise without pretension, curiosity without superficiality, and a commitment to depth and clarity.",
+    "graphicElements": {
+      "icons": "Minimalist, line-based icons with a consistent stroke weight. Used sparingly for navigation or functional indicators.",
+      "stickers": "Not applicable for this brand identity.",
+      "illustrations": "Abstract or conceptual illustrations that complement the intellectual tone, used sparingly. Avoid overly decorative or playful styles."
+    },
+    "designSummary": "**The Intellectual Archive: A Digital Sanctuary**\n\nThe Vision: This website is conceived as a digital extension of a disciplined mind – a calm, uncluttered space for deep thought, rigorous inquiry, and personal growth. Inspired by the quiet authority of academic journals and the focused intent of a craftsman's workshop, the design prioritizes content and clarity above all else. It eschews fleeting trends for timeless principles of readability and intellectual rigor, creating an enduring platform for a life of learning and building.\n\n**Execution Blueprint:**\n1. The Grid as a Foundation for Focus: A strict, multi-column grid (likely 12-column) will provide an underlying order, ensuring perfect alignment and predictable spacing. This structure is not for visual flair but to create a stable, distraction-free environment for content.\n2. Typography as the Primary Architect: A single, highly legible sans-serif font family will be used for all text. Hierarchy will be achieved through precise variations in size, weight, and line height, ensuring an academic yet modern feel.\n3. Whitespace as a Design Element: Generous, intentional use of negative space will surround all content, creating breathing room and guiding the user's eye through the information without visual fatigue.\n4. Color as a Subtle Guide: A monochromatic palette of whites, greys, and blacks will dominate, with a single, restrained accent color used exclusively for interactive elements like links and navigation to ensure functional clarity.\n5. Components as Functional Tools: UI elements will be stripped of ornamentation, defined by their utility and placement. Buttons will be clear calls to action, containers will provide logical separation, and images will be presented cleanly to support the narrative.",
+    "layout": {
+      "grid": {
+        "margins": "Generous, consistent margins around content blocks and page edges.",
+        "padding": "Generous padding within containers and around text blocks.",
+        "compositionApproach": "Strict 12-column grid with asymmetrical balance within defined content areas.",
+        "spacing": {
+          "gaps": "Base unit: 8px. All grid gaps are multiples of 8px (e.g., 24px, 40px).",
+          "rows": "Flexible, based on content",
+          "columns": "12 columns",
+          "compositionApproach": "Not specified"
+        }
+      },
+      "layoutDna": {
+        "contrastSpectrum": "High contrast between text and background, with minimal use of color for accents.",
+        "densitySpectrum": "Extremely low density, prioritizing whitespace and generous spacing.",
+        "textVsImageEmphasis": "Text-first, with images serving to illustrate or break up content without dominating.",
+        "complexitySpectrum": "Minimalist; focus on essential elements and clear information architecture.",
+        "gridAlignmentSpectrum": "Strict adherence to a multi-column grid (e.g., 12-column) for perfect alignment and order.",
+        "negativeSpaceUsage": "Dominant; whitespace is a primary design element, creating calm and focus."
+      },
+      "heroSectionLayout": "**The Focused Introduction**\nComposition (Tailwind Spec): Main container (`h-screen flex items-center justify-center p-8`). Headline (`text-7xl font-bold text-center`) with a short identity statement below (`text-xl text-center mt-4 text-muted`).\nSignature Hook (Framer Motion Spec): Parent `motion.div` with `initial={{ opacity: 0 }}` and `animate={{ opacity: 1, transition: { duration: 1.5, ease: 'easeOut' } }}`. Headline `motion.h1` uses `variants` with `transition: { staggerChildren: 0.05 }`. Each `motion.span` (for letters) has a variant with `initial={{ opacity: 0, y: 20 }}` and `animate={{ opacity: 1, y: 0 }}`."
+    },
+    "components": {
+      "images": "Layout Role: Content illustration. | Gallery Type: Clean, full-width or contained within the grid. Images are presented without borders or shadows, allowing content to be the focus. Avoid complex gallery layouts; prioritize simple, sequential display.",
+      "buttons": "Primary: background-color: #0076D9, color: #FFFFFF, border-radius: 0px, padding: 12px 24px, font-weight: 500. Secondary: background-color: transparent, color: #0076D9, border: 1px solid #0076D9, border-radius: 0px, padding: 12px 24px, font-weight: 500. Hover states should be subtle color shifts or underlines.",
+      "containers": "Method: Whitespace, Style: 80px vertical margin between sections. Content containers are max-width to ensure readability, with generous internal padding."
+    },
+    "palette": {
+      "colors": {
+        "customColors": [
+          {
+            "name": "destructive",
+            "value": "#ff0000"
+          },
+          {
+            "name": "destructiveForeground",
+            "value": "#FFFFFF"
+          },
+          {
+            "name": "muted",
+            "value": "#A9A9A9"
+          },
+          {
+            "name": "mutedForeground",
+            "value": "#131313"
+          },
+          {
+            "name": "link",
+            "value": "#CD260C"
+          },
+          {
+            "name": "linkForeground",
+            "value": "#FFFFFF"
+          }
+        ],
+        "background": "#FFFFFF",
+        "secondary": "#CD260C",
+        "foreground": "#131313",
+        "secondaryForeground": "#FFFFFF",
+        "primaryForeground": "#FFFFFF",
+        "primary": "#0076D9"
+      },
+      "paletteUsageGuide": "The primary color (#0076D9) is for key interactive elements and branding accents. The secondary color (#CD260C) is reserved for critical calls to action or specific emphasis. The background is pure white (#FFFFFF), and foreground text is a dark grey (#131313) for maximum readability. Muted grey (#A9A9A9) is for secondary information or less prominent UI elements. Custom colors like 'link' are used for hyperlinks. Ensure high contrast for all text elements.",
+      "paletteAccessibilityNotes": "All color combinations must adhere to WCAG AA contrast ratios, especially for text on background and primary/secondary elements. The primary and link colors are distinct and provide sufficient contrast against the white background. Text colors are dark for optimal legibility on light backgrounds."
+    },
+    "typography": {
+      "headings": {
+        "font": {
+          "fontFamily": "Montserrat",
+          "role": "headings",
+          "fontJustification": ""
+        },
+        "headingsAccessibilityNotes": "Ensure sufficient contrast between heading text and background. Font sizes should be large enough to be easily readable on various devices.",
+        "headingsSimilarFonts": [],
+        "headingsUsageGuide": "Headings should be used to structure content logically. Maintain a clear hierarchy from H1 to H3. Use bold weights for emphasis where appropriate, but avoid excessive styling. Ensure ample line height and spacing for readability."
+      },
+      "paragraphs": {
+        "font": {
+          "fontFamily": "Montserrat",
+          "role": "paragraphs",
+          "fontJustification": ""
+        },
+        "paragraphsUsageGuide": "Paragraph text should be set at a comfortable reading size with generous line height and letter spacing. Avoid justified text to improve readability. Break up long blocks of text with headings, lists, or images.",
+        "paragraphsSimilarFonts": [],
+        "paragraphsAccessibilityNotes": "Paragraph text must have high contrast against the background. Font size should be at least 16px equivalent for body text to ensure legibility."
+      },
+      "customFontFamilies": {},
+      "fontSizes": [
+        {
+          "name": "xs",
+          "size": "0.75rem",
+          "lineHeight": "1.25",
+          "letterSpacing": "0.02em",
+          "fontWeight": "400"
+        },
+        {
+          "name": "sm",
+          "size": "0.875rem",
+          "lineHeight": "1.3",
+          "letterSpacing": "0.02em",
+          "fontWeight": "400"
+        },
+        {
+          "name": "base",
+          "size": "1rem",
+          "lineHeight": "1.5",
+          "letterSpacing": "0.02em",
+          "fontWeight": "400"
+        },
+        {
+          "name": "lg",
+          "size": "1.125rem",
+          "lineHeight": "1.5",
+          "letterSpacing": "0.02em",
+          "fontWeight": "400"
+        },
+        {
+          "name": "xl",
+          "size": "1.25rem",
+          "lineHeight": "1.4",
+          "letterSpacing": "0.02em",
+          "fontWeight": "500"
+        },
+        {
+          "name": "2xl",
+          "size": "1.5rem",
+          "lineHeight": "1.3",
+          "letterSpacing": "0.01em",
+          "fontWeight": "500"
+        },
+        {
+          "name": "3xl",
+          "size": "1.875rem",
+          "lineHeight": "1.2",
+          "letterSpacing": "0.01em",
+          "fontWeight": "600"
+        },
+        {
+          "name": "4xl",
+          "size": "2.25rem",
+          "lineHeight": "1.15",
+          "letterSpacing": "0.01em",
+          "fontWeight": "600"
+        },
+        {
+          "name": "5xl",
+          "size": "3rem",
+          "lineHeight": "1.1",
+          "letterSpacing": "0.005em",
+          "fontWeight": "700"
+        },
+        {
+          "name": "6xl",
+          "size": "3.75rem",
+          "lineHeight": "1.05",
+          "letterSpacing": "0.005em",
+          "fontWeight": "700"
+        },
+        {
+          "name": "7xl",
+          "size": "4.5rem",
+          "lineHeight": "1.02",
+          "letterSpacing": "0.005em",
+          "fontWeight": "700"
+        },
+        {
+          "name": "8xl",
+          "size": "6rem",
+          "lineHeight": "1",
+          "letterSpacing": "0.002em",
+          "fontWeight": "800"
+        },
+        {
+          "name": "9xl",
+          "size": "8rem",
+          "lineHeight": "1",
+          "letterSpacing": "0.001em",
+          "fontWeight": "800"
+        }
+      ],
+      "welcomeSectionTypography": {
+        "placement": "Centered on the hero section, below the main headline.",
+        "implementation": "A concise, impactful statement using the 'base' or 'lg' font size, with a regular font weight. Ensure it has ample padding and line height for readability."
+      }
+    },
+    "originImagesUrls": []
+  },
+  "attachments": {
+    "contentImagesUrls": [],
+    "inspirationImagesUrls": [
+      "https://wixmp-c562ea68f10846b458285ce5.wixmp.com/scraped-screenshots/screenshot-1774345964397.webp"
+    ]
+  },
+  "status": "READY",
+  "plan": "\n\n```json\n{\n  \"sections\": [\n    {\n      \"id\": \"overview\",\n      \"title\": \"## Overview\",\n      \"content\": \"A calm, content-first personal website for a Computer Engineering student specializing in AI and mathematics. The site serves as a thinking space and life archive, featuring long-form writing, research notes, project documentation, and personal reflections on violin and calisthenics.\"\n    },\n    {\n      \"id\": \"key-features\",\n      \"title\": \"## Key features\",\n      \"content\": \"- **View Article Listing**: Browse all long-form articles on AI, mathematics, learning, and deep work.\\n- **View Article Detail**: Read individual articles with table of contents and reading time estimation.\\n- **View Ideas Listing**: Browse short-form thoughts and raw, unfinished thinking.\\n- **View Ideas Detail**: Read individual idea notes from the public notebook.\\n- **View Project Listing**: Browse serious projects with focus on depth over quantity.\\n- **View Project Detail**: Read detailed project documentation including problem, approach, and insights.\\n- **View Research Listing**: Browse research papers (hidden when empty).\\n- **View Research Detail**: Read individual research papers.\\n- **View Life Content Listing**: Browse essays on violin journey, calisthenics progress, and personal reflections.\\n- **View Life Content Detail**: Read individual life essays.\\n- **View Certificates Listing**: Browse a clean list of certifications with titles, issuers, credential links, and IDs.\\n- **View Now Page**: See current focus areas and what is being worked on now.\\n- **Filter Content by Tags**: Filter articles, ideas, and other content by tags like AI, Math, Life, etc.\",\n      \"metadata\": [\n        { \"id\": \"view-article-listing\", \"name\": \"View Article Listing\" },\n        { \"id\": \"view-article-detail\", \"name\": \"View Article Detail\" },\n        { \"id\": \"view-ideas-listing\", \"name\": \"View Ideas Listing\" },\n        { \"id\": \"view-ideas-detail\", \"name\": \"View Ideas Detail\" },\n        { \"id\": \"view-project-listing\", \"name\": \"View Project Listing\" },\n        { \"id\": \"view-project-detail\", \"name\": \"View Project Detail\" },\n        { \"id\": \"view-research-listing\", \"name\": \"View Research Listing\" },\n        { \"id\": \"view-research-detail\", \"name\": \"View Research Detail\" },\n        { \"id\": \"view-life-content-listing\", \"name\": \"View Life Content Listing\" },\n        { \"id\": \"view-life-content-detail\", \"name\": \"View Life Content Detail\" },\n        { \"id\": \"view-certificates-listing\", \"name\": \"View Certificates Listing\" },\n        { \"id\": \"view-now-page\", \"name\": \"View Now Page\" },\n        { \"id\": \"filter-content-by-tags\", \"name\": \"Filter Content by Tags\" }\n      ]\n    },\n    {\n      \"id\": \"structure\",\n      \"title\": \"## Structure\",\n      \"content\": \"- **Header (Reusable)**: Contains site name, navigation links to Writing, Ideas, Projects, Research, Life, Certificates, and Now pages.\\n- **Footer (Reusable)**: Contains minimal footer information and links.\\n- **Home Page**: Displays minimal intro with name and identity statement, key entry points to main sections, and latest content from articles or notes.\\n- **Writing Page**: Hosts the article listing with filtering by tags, and individual article detail views with table of contents and reading time.\\n- **Ideas Page**: Hosts the ideas listing and individual idea detail views for short-form thoughts.\\n- **Projects Page**: Hosts the project listing and individual project detail views with problem, approach, and insights.\\n- **Research Page**: Hosts the research listing and individual research paper detail views (conditionally visible based on content).\\n- **Life Page**: Hosts the life content listing and individual life essay detail views on violin, calisthenics, and reflections.\\n- **Certificates Page**: Displays a clean list of certifications with all relevant details.\\n- **Now Page**: Shows current focus areas and what is being worked on.\"\n    }\n  ],\n  \"apps\": [\n    {\n      \"id\": \"wix-cms\",\n      \"keyFeatures\": [\n        { \"id\": \"view-article-listing\", \"name\": \"View Article Listing\" },\n        { \"id\": \"view-article-detail\", \"name\": \"View Article Detail\" },\n        { \"id\": \"view-ideas-listing\", \"name\": \"View Ideas Listing\" },\n        { \"id\": \"view-ideas-detail\", \"name\": \"View Ideas Detail\" },\n        { \"id\": \"view-project-listing\", \"name\": \"View Project Listing\" },\n        { \"id\": \"view-project-detail\", \"name\": \"View Project Detail\" },\n        { \"id\": \"view-research-listing\", \"name\": \"View Research Listing\" },\n        { \"id\": \"view-research-detail\", \"name\": \"View Research Detail\" },\n        { \"id\": \"view-life-content-listing\", \"name\": \"View Life Content Listing\" },\n        { \"id\": \"view-life-content-detail\", \"name\": \"View Life Content Detail\" },\n        { \"id\": \"view-certificates-listing\", \"name\": \"View Certificates Listing\" },\n        { \"id\": \"view-now-page\", \"name\": \"View Now Page\" },\n        { \"id\": \"filter-content-by-tags\", \"name\": \"Filter Content by Tags\" }\n      ]\n    }\n  ],\n  \"version\": \"4.0.1\"\n}\n```"
+}
