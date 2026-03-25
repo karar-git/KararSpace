@@ -1,6 +1,5 @@
 import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
 import { ScrollToTop } from '@/lib/scroll-to-top';
-import ErrorPage from '@/integrations/errorHandlers/ErrorPage';
 import HomePage from '@/components/pages/HomePage';
 import WritingPage from '@/components/pages/WritingPage';
 import ArticleDetailPage from '@/components/pages/ArticleDetailPage';
@@ -14,6 +13,19 @@ import LifePage from '@/components/pages/LifePage';
 import LifeDetailPage from '@/components/pages/LifeDetailPage';
 import CertificatesPage from '@/components/pages/CertificatesPage';
 import NowPage from '@/components/pages/NowPage';
+
+// Simple error fallback
+function ErrorPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-950">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-white mb-4">Oops!</h1>
+        <p className="text-slate-400 mb-6">Something went wrong.</p>
+        <a href="/" className="text-indigo-400 hover:text-indigo-300">Go back home</a>
+      </div>
+    </div>
+  );
+}
 
 // Layout component that includes ScrollToTop
 function Layout() {
@@ -34,93 +46,54 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <HomePage />,
-        routeMetadata: {
-          pageIdentifier: 'home',
-        },
       },
       {
         path: "writing",
         element: <WritingPage />,
-        routeMetadata: {
-          pageIdentifier: 'writing',
-        },
       },
       {
         path: "writing/:id",
         element: <ArticleDetailPage />,
-        routeMetadata: {
-          pageIdentifier: 'article-detail',
-        },
       },
       {
         path: "ideas",
         element: <IdeasPage />,
-        routeMetadata: {
-          pageIdentifier: 'ideas',
-        },
       },
       {
         path: "ideas/:id",
         element: <IdeaDetailPage />,
-        routeMetadata: {
-          pageIdentifier: 'idea-detail',
-        },
       },
       {
         path: "projects",
         element: <ProjectsPage />,
-        routeMetadata: {
-          pageIdentifier: 'projects',
-        },
       },
       {
         path: "projects/:id",
         element: <ProjectDetailPage />,
-        routeMetadata: {
-          pageIdentifier: 'project-detail',
-        },
       },
       {
         path: "research",
         element: <ResearchPage />,
-        routeMetadata: {
-          pageIdentifier: 'research',
-        },
       },
       {
         path: "research/:id",
         element: <ResearchDetailPage />,
-        routeMetadata: {
-          pageIdentifier: 'research-detail',
-        },
       },
       {
         path: "life",
         element: <LifePage />,
-        routeMetadata: {
-          pageIdentifier: 'life',
-        },
       },
       {
         path: "life/:id",
         element: <LifeDetailPage />,
-        routeMetadata: {
-          pageIdentifier: 'life-detail',
-        },
       },
       {
         path: "certificates",
         element: <CertificatesPage />,
-        routeMetadata: {
-          pageIdentifier: 'certificates',
-        },
       },
       {
         path: "now",
         element: <NowPage />,
-        routeMetadata: {
-          pageIdentifier: 'now',
-        },
       },
       {
         path: "*",
@@ -128,9 +101,7 @@ const router = createBrowserRouter([
       },
     ],
   },
-], {
-  basename: import.meta.env.BASE_NAME,
-});
+]);
 
 export default function AppRouter() {
   return (
