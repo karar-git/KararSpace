@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { BaseCrudService } from '@/integrations';
 import { ResearchPapers } from '@/entities';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { format } from 'date-fns';
 
 export default function ResearchDetailPage() {
@@ -28,107 +27,111 @@ export default function ResearchDetailPage() {
     loadPaper();
   }, [id]);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 section">
+          <div className="container max-w-content">
+            <div className="animate-pulse">
+              <div className="h-4 bg-border rounded w-24 mb-12" />
+              <div className="h-8 bg-border rounded w-3/4 mb-4" />
+              <div className="h-8 bg-border rounded w-1/2 mb-8" />
+              <div className="h-4 bg-border rounded w-1/3 mb-2" />
+              <div className="h-4 bg-border rounded w-1/2 mb-12" />
+              <div className="space-y-4">
+                <div className="h-4 bg-border rounded w-full" />
+                <div className="h-4 bg-border rounded w-full" />
+                <div className="h-4 bg-border rounded w-3/4" />
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!paper) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 section">
+          <div className="container max-w-content text-center py-20">
+            <h1 className="text-2xl font-medium mb-4">Paper not found</h1>
+            <Link to="/research" className="text-muted hover:text-foreground transition-colors">
+              Back to Research
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
-      <div className="flex-1 py-12 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto min-h-[600px]">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <LoadingSpinner />
+      <main className="flex-1">
+        <article className="section">
+          <div className="container max-w-content">
+            {/* Back link */}
+            <Link
+              to="/research"
+              className="inline-flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors mb-12"
+            >
+              <ArrowLeft size={16} />
+              Research
+            </Link>
+
+            {/* Title */}
+            <h1 className="text-3xl md:text-4xl font-medium tracking-tighter leading-tight mb-6">
+              {paper.title}
+            </h1>
+
+            {/* Meta */}
+            <div className="space-y-2 mb-8 pb-8 border-b border-border">
+              {paper.authors && (
+                <p className="text-muted">{paper.authors}</p>
+              )}
+              {paper.journalConference && (
+                <p className="text-muted italic">{paper.journalConference}</p>
+              )}
+              <div className="flex items-center gap-4 text-sm text-muted pt-2">
+                {paper.publishedAt && (
+                  <span>{format(new Date(paper.publishedAt), 'MMMM yyyy')}</span>
+                )}
+                {paper.paperUrl && (
+                  <a
+                    href={paper.paperUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+                  >
+                    View paper
+                    <ArrowUpRight size={14} />
+                  </a>
+                )}
               </div>
-            ) : !paper ? (
-              <div className="text-center py-20">
-                <h2 className="text-2xl font-heading font-bold text-foreground mb-4">Research paper not found</h2>
-                <Link to="/research" className="text-accent hover:text-accent/80 font-paragraph">
-                  Back to Research
-                </Link>
-              </div>
-            ) : (
-              <article className="animate-reveal">
-                <Link
-                  to="/research"
-                  className="inline-flex items-center gap-2 text-accent hover:text-accent/80 font-paragraph mb-8 transition-colors"
-                >
-                  <ArrowLeft size={20} />
-                  Back to Research
-                </Link>
+            </div>
 
-                <div className="bg-gradient-to-br from-background to-accent/5 p-8 md:p-12 rounded-2xl shadow-xl">
-                  <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-6">
-                    {paper.title}
-                  </h1>
-
-                  <div className="space-y-3 mb-8 pb-8 border-b border-foreground/10">
-                    {paper.authors && (
-                      <p className="text-foreground/70 font-paragraph">
-                        <span className="font-semibold text-foreground">Authors:</span> {paper.authors}
-                      </p>
-                    )}
-                    
-                    {paper.journalConference && (
-                      <p className="text-foreground/70 font-paragraph">
-                        <span className="font-semibold text-foreground">Published in:</span> {paper.journalConference}
-                      </p>
-                    )}
-                    
-                    <div className="flex items-center gap-6 text-foreground/60 font-paragraph text-sm">
-                      {paper.publicationDate && (
-                        <div className="flex items-center gap-2">
-                          <Calendar size={16} />
-                          {format(new Date(paper.publicationDate), 'MMMM yyyy')}
-                        </div>
-                      )}
-                      {paper.paperUrl && (
-                        <a
-                          href={paper.paperUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-accent hover:text-accent/80 transition-colors"
-                        >
-                          <ExternalLink size={16} />
-                          View Full Paper
-                        </a>
-                      )}
-                    </div>
-                  </div>
-
-                  {paper.abstract && (
-                    <div>
-                      <h2 className="text-2xl font-heading font-bold text-foreground mb-4">
-                        Abstract
-                      </h2>
-                      <div className="text-foreground/80 font-paragraph leading-relaxed whitespace-pre-wrap">
-                        {paper.abstract}
-                      </div>
-                    </div>
-                  )}
+            {/* Abstract */}
+            {paper.abstract && (
+              <div>
+                <h2 className="text-sm font-medium text-muted uppercase tracking-wider mb-4">
+                  Abstract
+                </h2>
+                <div className="text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                  {paper.abstract}
                 </div>
-              </article>
+              </div>
             )}
           </div>
-        </div>
-      </div>
+        </article>
+      </main>
 
       <Footer />
-
-      <style>{`
-        @keyframes reveal {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-reveal {
-          animation: reveal 0.6s ease-out forwards;
-        }
-      `}</style>
     </div>
   );
 }

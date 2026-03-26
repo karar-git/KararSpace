@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { BaseCrudService } from '@/integrations';
 import { Projects } from '@/entities';
-import { Image } from '@/components/ui/image';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { format } from 'date-fns';
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,132 +26,154 @@ export default function ProjectDetailPage() {
     loadProject();
   }, [id]);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 section">
+          <div className="container max-w-wide">
+            <div className="animate-pulse">
+              <div className="h-4 bg-border rounded w-20 mb-12" />
+              <div className="aspect-[16/9] bg-border rounded-lg mb-12" />
+              <div className="max-w-content">
+                <div className="h-10 bg-border rounded w-3/4 mb-8" />
+                <div className="h-4 bg-border rounded w-full mb-2" />
+                <div className="h-4 bg-border rounded w-2/3" />
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 section">
+          <div className="container text-center py-20">
+            <h1 className="text-2xl font-medium mb-4">Project not found</h1>
+            <Link to="/projects" className="text-muted hover:text-foreground transition-colors">
+              Back to Work
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
-      <div className="flex-1 py-12 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto min-h-[600px]">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-20">
-                <LoadingSpinner />
-              </div>
-            ) : !project ? (
-              <div className="text-center py-20">
-                <h2 className="text-2xl font-heading font-bold text-foreground mb-4">Project not found</h2>
-                <Link to="/projects" className="text-primary hover:text-primary/80 font-paragraph">
-                  Back to Projects
-                </Link>
-              </div>
-            ) : (
-              <article className="animate-reveal">
-                <Link
-                  to="/projects"
-                  className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-paragraph mb-8 transition-colors"
-                >
-                  <ArrowLeft size={20} />
-                  Back to Projects
-                </Link>
+      <main className="flex-1">
+        <article className="section">
+          <div className="container">
+            {/* Back link */}
+            <Link
+              to="/projects"
+              className="inline-flex items-center gap-2 text-sm text-muted hover:text-foreground transition-colors mb-12"
+            >
+              <ArrowLeft size={16} />
+              Work
+            </Link>
 
-                {project.mainImage && (
-                  <Image
-                    src={project.mainImage}
-                    alt={project.title || 'Project'}
-                    width={800}
-                    className="w-full h-auto rounded-2xl shadow-2xl mb-8"
-                  />
-                )}
+            {/* Hero Image */}
+            {project.mainImage && (
+              <div className="aspect-[16/9] bg-border rounded-lg overflow-hidden mb-12 -mx-6 md:mx-0">
+                <img
+                  src={project.mainImage}
+                  alt={project.title || ''}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
 
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-foreground mb-6">
+            {/* Content */}
+            <div className="max-w-content">
+              {/* Title & Links */}
+              <div className="mb-12">
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-medium tracking-tighter leading-tight mb-6">
                   {project.title}
                 </h1>
+                
+                {project.shortDescription && (
+                  <p className="text-xl text-muted leading-relaxed mb-8">
+                    {project.shortDescription}
+                  </p>
+                )}
 
-                <div className="flex items-center gap-6 text-foreground/60 font-paragraph text-sm mb-8 pb-8 border-b border-foreground/10">
-                  {project.publicationDate && (
-                    <div className="flex items-center gap-2">
-                      <Calendar size={16} />
-                      {format(new Date(project.publicationDate), 'MMMM yyyy')}
-                    </div>
-                  )}
+                {/* External Links */}
+                <div className="flex flex-wrap gap-4">
                   {project.projectUrl && (
                     <a
                       href={project.projectUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
+                      className="inline-flex items-center gap-2 text-sm px-4 py-2 border border-border rounded-lg hover:border-border-hover transition-colors"
                     >
-                      <ExternalLink size={16} />
                       View Project
+                      <ArrowUpRight size={16} />
+                    </a>
+                  )}
+                  {project.githubUrl && (
+                    <a
+                      href={project.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-sm px-4 py-2 border border-border rounded-lg hover:border-border-hover transition-colors"
+                    >
+                      GitHub
+                      <ArrowUpRight size={16} />
                     </a>
                   )}
                 </div>
+              </div>
 
-                {project.shortDescription && (
-                  <div className="bg-primary/5 p-6 rounded-xl mb-8">
-                    <p className="text-lg text-foreground/90 font-paragraph leading-relaxed">
-                      {project.shortDescription}
-                    </p>
-                  </div>
+              {/* Sections */}
+              <div className="space-y-12 border-t border-border pt-12">
+                {project.problem && (
+                  <section>
+                    <h2 className="text-sm font-medium text-muted uppercase tracking-wider mb-4">
+                      The Problem
+                    </h2>
+                    <div className="text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                      {project.problem}
+                    </div>
+                  </section>
                 )}
 
-                <div className="space-y-8">
-                  {project.problem && (
-                    <div>
-                      <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-4">
-                        The Problem
-                      </h2>
-                      <div className="text-foreground/80 font-paragraph leading-relaxed whitespace-pre-wrap">
-                        {project.problem}
-                      </div>
+                {project.approach && (
+                  <section>
+                    <h2 className="text-sm font-medium text-muted uppercase tracking-wider mb-4">
+                      Approach
+                    </h2>
+                    <div className="text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                      {project.approach}
                     </div>
-                  )}
+                  </section>
+                )}
 
-                  {project.approach && (
-                    <div>
-                      <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-4">
-                        The Approach
-                      </h2>
-                      <div className="text-foreground/80 font-paragraph leading-relaxed whitespace-pre-wrap">
-                        {project.approach}
-                      </div>
+                {project.insights && (
+                  <section>
+                    <h2 className="text-sm font-medium text-muted uppercase tracking-wider mb-4">
+                      Insights
+                    </h2>
+                    <div className="text-foreground/90 leading-relaxed whitespace-pre-wrap">
+                      {project.insights}
                     </div>
-                  )}
-
-                  {project.insights && (
-                    <div>
-                      <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-4">
-                        Key Insights
-                      </h2>
-                      <div className="text-foreground/80 font-paragraph leading-relaxed whitespace-pre-wrap">
-                        {project.insights}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </article>
-            )}
+                  </section>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </article>
+      </main>
 
       <Footer />
-
-      <style>{`
-        @keyframes reveal {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-reveal {
-          animation: reveal 0.6s ease-out forwards;
-        }
-      `}</style>
     </div>
   );
 }

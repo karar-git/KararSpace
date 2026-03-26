@@ -13,15 +13,18 @@ import LifePage from '@/components/pages/LifePage';
 import LifeDetailPage from '@/components/pages/LifeDetailPage';
 import CertificatesPage from '@/components/pages/CertificatesPage';
 import NowPage from '@/components/pages/NowPage';
+import OpportunitiesPage from '@/components/pages/OpportunitiesPage';
 
 // Simple error fallback
 function ErrorPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center">
-        <h1 className="text-4xl font-bold text-white mb-4">Oops!</h1>
-        <p className="text-slate-400 mb-6">Something went wrong.</p>
-        <a href="/" className="text-indigo-400 hover:text-indigo-300">Go back home</a>
+        <h1 className="text-4xl font-medium text-foreground mb-4">404</h1>
+        <p className="text-muted mb-6">Page not found.</p>
+        <a href="/" className="text-muted hover:text-foreground transition-colors">
+          Go back home
+        </a>
       </div>
     </div>
   );
@@ -94,6 +97,10 @@ const router = createBrowserRouter([
       {
         path: "now",
         element: <NowPage />,
+      },
+      {
+        path: "opportunities",
+        element: <OpportunitiesPage />,
       },
       {
         path: "*",

@@ -1,90 +1,75 @@
 import { Link } from 'react-router-dom';
 
 export default function Footer() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="bg-gradient-to-b from-slate-950 to-slate-900 border-t border-slate-800/50 py-16">
-      <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-4 gap-12 mb-12">
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xs">∑</span>
-              </div>
-              <h3 className="font-heading font-bold text-slate-100 text-lg">Portfolio</h3>
-            </div>
-            <p className="text-slate-400 font-paragraph text-sm leading-relaxed">
-              Exploring mathematics, AI, music, and physical excellence. A space for ideas, projects, and continuous growth.
+    <footer className="border-t border-border py-16 mt-auto">
+      <div className="container">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+          {/* About */}
+          <div className="lg:col-span-2">
+            <h3 className="font-medium mb-3">Karar Haitham</h3>
+            <p className="text-muted text-sm leading-relaxed max-w-md">
+              Building at the intersection of technology and human potential. 
+              Exploring mathematics, AI, and the pursuit of excellence.
             </p>
           </div>
 
+          {/* Navigation */}
           <div>
-            <h4 className="font-heading font-bold text-slate-100 mb-4 flex items-center gap-2">
-              <div className="w-1 h-4 bg-gradient-to-b from-indigo-500 to-purple-500"></div>
-              Main
+            <h4 className="text-sm font-medium text-muted uppercase tracking-wider mb-4">
+              Navigate
             </h4>
-            <nav className="flex flex-col gap-3">
-              <Link to="/writing" className="text-slate-400 hover:text-indigo-300 transition-colors font-paragraph text-sm hover:translate-x-1 duration-200">
+            <nav className="flex flex-col gap-2">
+              <Link to="/projects" className="text-sm text-muted hover:text-foreground transition-colors">
+                Work
+              </Link>
+              <Link to="/writing" className="text-sm text-muted hover:text-foreground transition-colors">
                 Writing
               </Link>
-              <Link to="/projects" className="text-slate-400 hover:text-indigo-300 transition-colors font-paragraph text-sm hover:translate-x-1 duration-200">
-                Projects
-              </Link>
-              <Link to="/certificates" className="text-slate-400 hover:text-indigo-300 transition-colors font-paragraph text-sm hover:translate-x-1 duration-200">
-                Certificates
-              </Link>
-              <Link to="/now" className="text-slate-400 hover:text-indigo-300 transition-colors font-paragraph text-sm hover:translate-x-1 duration-200">
-                Current Focus
-              </Link>
-            </nav>
-          </div>
-
-          <div>
-            <h4 className="font-heading font-bold text-slate-100 mb-4 flex items-center gap-2">
-              <div className="w-1 h-4 bg-gradient-to-b from-purple-500 to-pink-500"></div>
-              Explore
-            </h4>
-            <nav className="flex flex-col gap-3">
-              <Link to="/ideas" className="text-slate-400 hover:text-indigo-300 transition-colors font-paragraph text-sm hover:translate-x-1 duration-200">
-                Ideas
-              </Link>
-              <Link to="/research" className="text-slate-400 hover:text-indigo-300 transition-colors font-paragraph text-sm hover:translate-x-1 duration-200">
+              <Link to="/research" className="text-sm text-muted hover:text-foreground transition-colors">
                 Research
               </Link>
-              <Link to="/life" className="text-slate-400 hover:text-indigo-300 transition-colors font-paragraph text-sm hover:translate-x-1 duration-200">
-                Life
+              <Link to="/certificates" className="text-sm text-muted hover:text-foreground transition-colors">
+                Certificates
               </Link>
             </nav>
           </div>
 
+          {/* More */}
           <div>
-            <h4 className="font-heading font-bold text-slate-100 mb-4 flex items-center gap-2">
-              <div className="w-1 h-4 bg-gradient-to-b from-pink-500 to-orange-500"></div>
-              Connect
+            <h4 className="text-sm font-medium text-muted uppercase tracking-wider mb-4">
+              More
             </h4>
-            <p className="text-slate-400 font-paragraph text-sm mb-4">
-              Interested in collaborating or learning more?
-            </p>
-            <a
-              href="mailto:contact@example.com"
-              className="text-indigo-400 hover:text-indigo-300 font-paragraph font-semibold text-sm transition-colors hover:underline"
-            >
-              Get in touch
-            </a>
+            <nav className="flex flex-col gap-2">
+              <Link to="/ideas" className="text-sm text-muted hover:text-foreground transition-colors">
+                Ideas
+              </Link>
+              <Link to="/life" className="text-sm text-muted hover:text-foreground transition-colors">
+                Life
+              </Link>
+              <Link to="/now" className="text-sm text-muted hover:text-foreground transition-colors">
+                Now
+              </Link>
+              <Link to="/opportunities" className="text-sm text-muted hover:text-foreground transition-colors">
+                Opportunities
+              </Link>
+            </nav>
           </div>
         </div>
 
-        <div className="pt-8 border-t border-slate-800/50">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-slate-500 font-paragraph text-sm">
-              © 2026 Portfolio. Crafted with precision and care.
-            </p>
-            <div className="flex gap-4 text-slate-500 text-xs font-paragraph">
-              <span>∑ Mathematics</span>
-              <span>⚙ AI</span>
-              <span>♪ Music</span>
-              <span>◊ Excellence</span>
-            </div>
-          </div>
+        {/* Bottom */}
+        <div className="pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-muted">
+            © {currentYear} Karar Haitham
+          </p>
+          <a
+            href="mailto:addfgh177@gmail.com"
+            className="text-sm text-muted hover:text-foreground transition-colors"
+          >
+            addfgh177@gmail.com
+          </a>
         </div>
       </div>
     </footer>

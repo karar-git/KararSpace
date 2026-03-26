@@ -5,15 +5,65 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
   body {
-    @apply bg-slate-950 text-slate-100;
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
   }
   
-  h1, h2, h3, h4, h5, h6 {
-    @apply text-slate-100;
+  ::selection {
+    @apply bg-foreground text-background;
   }
   
-  p, span, div {
-    @apply text-slate-200;
+  /* Clean link styles */
+  a {
+    @apply text-foreground transition-colors duration-200;
+  }
+  
+  a:hover {
+    @apply text-muted;
+  }
+}
+
+@layer components {
+  /* Container */
+  .container {
+    @apply max-w-wide mx-auto px-6 md:px-8;
+  }
+  
+  /* Section spacing */
+  .section {
+    @apply py-16 md:py-24;
+  }
+  
+  /* Subtle hover for cards */
+  .card-hover {
+    @apply transition-colors duration-200;
+  }
+  
+  .card-hover:hover {
+    @apply bg-border/30;
+  }
+}
+
+@layer utilities {
+  /* Text balance for headings */
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Hide scrollbar */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

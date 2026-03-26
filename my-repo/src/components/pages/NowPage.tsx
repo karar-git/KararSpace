@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Calendar, Activity } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { BaseCrudService } from '@/integrations';
@@ -11,7 +10,7 @@ export default function NowPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadFocusItems = async () => {
+    const load = async () => {
       try {
         setIsLoading(true);
         const result = await BaseCrudService.getAll<NowFocus>('nowfocus', {}, { limit: 50 });
@@ -22,110 +21,85 @@ export default function NowPage() {
         setIsLoading(false);
       }
     };
-    loadFocusItems();
+    load();
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-b from-primary/5 via-background to-background py-20 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center animate-reveal">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-foreground mb-6">
-              What I&apos;m Doing Now
+      <main className="flex-1">
+        {/* Header */}
+        <section className="section border-b border-border">
+          <div className="container">
+            <h1 className="text-4xl md:text-5xl font-medium tracking-tighter mb-4">
+              Now
             </h1>
-            <p className="text-lg md:text-xl text-foreground/80 font-paragraph leading-relaxed">
-              Current focus areas and what I&apos;m working on. Updated regularly to reflect my priorities and projects.
+            <p className="text-lg text-muted max-w-2xl">
+              What I'm currently focused on and working toward.
             </p>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Focus Items */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto min-h-[600px]">
-            {isLoading ? null : focusItems.length > 0 ? (
-              <div className="space-y-6">
-                {focusItems.map((item, index) => (
-                  <div
-                    key={item._id}
-                    className="bg-gradient-to-br from-background to-primary/5 p-8 md:p-10 rounded-2xl border border-foreground/10 shadow-lg hover:shadow-xl transition-all duration-300 animate-reveal"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Activity className="text-primary" size={24} />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-2xl font-heading font-bold text-foreground mb-2">
-                          {item.title}
-                        </h3>
-                        {item.status && (
-                          <span className="inline-block px-3 py-1 bg-primary/10 text-primary text-sm font-paragraph font-semibold rounded-full">
-                            {item.status}
-                          </span>
-                        )}
-                      </div>
+        {/* Focus Items */}
+        <section className="section">
+          <div className="container max-w-content">
+            {isLoading ? (
+              <div className="space-y-8">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-6 bg-border rounded w-1/2 mb-3" />
+                    <div className="h-4 bg-border rounded w-full mb-2" />
+                    <div className="h-4 bg-border rounded w-3/4" />
+                  </div>
+                ))}
+              </div>
+            ) : focusItems.length > 0 ? (
+              <div className="space-y-12">
+                {focusItems.map((item) => (
+                  <div key={item._id}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <h2 className="text-xl font-medium">{item.title}</h2>
+                      {item.status && (
+                        <span className="text-xs px-2 py-1 bg-border rounded-full text-muted">
+                          {item.status}
+                        </span>
+                      )}
                     </div>
-
+                    
                     {item.description && (
-                      <p className="text-foreground/80 font-paragraph leading-relaxed mb-4 whitespace-pre-wrap">
+                      <p className="text-muted leading-relaxed mb-4 whitespace-pre-wrap">
                         {item.description}
                       </p>
                     )}
-
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-foreground/60 font-paragraph">
+                    
+                    <div className="flex items-center gap-4 text-sm text-muted">
                       {item.startDate && (
-                        <div className="flex items-center gap-2">
-                          <Calendar size={14} />
-                          <span>Started: {format(new Date(item.startDate), 'MMMM yyyy')}</span>
-                        </div>
-                      )}
-                      {item.lastUpdated && (
-                        <div className="flex items-center gap-2">
-                          <span>Updated: {format(new Date(item.lastUpdated), 'MMM d, yyyy')}</span>
-                        </div>
+                        <span>Started {format(new Date(item.startDate), 'MMM yyyy')}</span>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-20">
-                <div className="bg-gradient-to-br from-background to-primary/5 p-12 rounded-2xl shadow-xl max-w-2xl mx-auto">
-                  <h2 className="text-2xl font-heading font-bold text-foreground mb-4">
-                    Currently Updating
-                  </h2>
-                  <p className="text-foreground/70 font-paragraph leading-relaxed">
-                    This page is being updated with current focus areas. Check back soon to see what I&apos;m working on.
-                  </p>
-                </div>
+              <div className="py-12">
+                <p className="text-muted leading-relaxed">
+                  This page is currently being updated. Check back soon to see what I'm working on.
+                </p>
               </div>
             )}
+
+            {/* Last updated note */}
+            <div className="mt-16 pt-8 border-t border-border">
+              <p className="text-sm text-muted">
+                This page is inspired by <a href="https://nownownow.com/about" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">nownownow.com</a>
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
       <Footer />
-
-      <style>{`
-        @keyframes reveal {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-reveal {
-          animation: reveal 0.6s ease-out forwards;
-        }
-      `}</style>
     </div>
   );
 }

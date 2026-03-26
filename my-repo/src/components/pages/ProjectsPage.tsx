@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, ExternalLink } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { BaseCrudService } from '@/integrations';
 import { Projects } from '@/entities';
-import { Image } from '@/components/ui/image';
-import { format } from 'date-fns';
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Projects[]>([]);
@@ -16,8 +14,7 @@ export default function ProjectsPage() {
 
   const loadProjects = async (skipValue: number = 0) => {
     try {
-      setIsLoading(true);
-      const result = await BaseCrudService.getAll<Projects>('projects', {}, { limit: 9, skip: skipValue });
+      const result = await BaseCrudService.getAll<Projects>('projects', {}, { limit: 12, skip: skipValue });
       if (skipValue === 0) {
         setProjects(result.items);
       } else {
@@ -27,116 +24,111 @@ export default function ProjectsPage() {
       setSkip(result.nextSkip || 0);
     } catch (error) {
       console.error('Error loading projects:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadProjects();
+    const load = async () => {
+      setIsLoading(true);
+      await loadProjects();
+      setIsLoading(false);
+    };
+    load();
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-b from-primary/5 via-background to-background py-20 md:py-24">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center animate-reveal">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-foreground mb-6">
-              Projects
+      <main className="flex-1">
+        {/* Header */}
+        <section className="section border-b border-border">
+          <div className="container">
+            <h1 className="text-4xl md:text-5xl font-medium tracking-tighter mb-4">
+              Work
             </h1>
-            <p className="text-lg md:text-xl text-foreground/80 font-paragraph leading-relaxed">
-              Serious projects with focus on depth over quantity. Each project includes the problem, approach, and insights gained.
+            <p className="text-lg text-muted max-w-2xl">
+              Selected projects focused on depth and meaningful impact.
             </p>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Projects Grid */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="min-h-[600px]">
-            {isLoading && projects.length === 0 ? null : projects.length > 0 ? (
+        {/* Projects Grid */}
+        <section className="section">
+          <div className="container">
+            {isLoading ? (
+              <div className="grid md:grid-cols-2 gap-x-8 gap-y-16">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="aspect-[16/10] bg-border rounded-lg mb-5" />
+                    <div className="h-5 bg-border rounded w-3/4 mb-2" />
+                    <div className="h-4 bg-border rounded w-full" />
+                  </div>
+                ))}
+              </div>
+            ) : projects.length > 0 ? (
               <>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {projects.map((project, index) => (
+                <div className="grid md:grid-cols-2 gap-x-8 gap-y-16">
+                  {projects.map((project) => (
                     <Link
                       key={project._id}
                       to={`/projects/${project._id}`}
-                      className="bg-background border border-foreground/10 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 animate-reveal"
-                      style={{ animationDelay: `${index * 50}ms` }}
+                      className="group block"
                     >
-                      {project.mainImage && (
-                        <Image
-                          src={project.mainImage}
-                          alt={project.title || 'Project'}
-                          width={400}
-                          className="w-full h-48 object-cover"
-                        />
+                      {project.mainImage ? (
+                        <div className="aspect-[16/10] bg-border rounded-lg overflow-hidden mb-5">
+                          <img
+                            src={project.mainImage}
+                            alt={project.title || ''}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        </div>
+                      ) : (
+                        <div className="aspect-[16/10] bg-border rounded-lg mb-5 flex items-center justify-center">
+                          <span className="text-muted text-sm">No image</span>
+                        </div>
                       )}
-                      <div className="p-6">
-                        <h3 className="text-xl font-heading font-bold text-foreground mb-3 line-clamp-2">
-                          {project.title}
-                        </h3>
-                        <p className="text-foreground/70 font-paragraph text-sm leading-relaxed mb-4 line-clamp-3">
-                          {project.shortDescription}
-                        </p>
-                        <div className="flex items-center justify-between">
-                          {project.publicationDate && (
-                            <div className="flex items-center gap-2 text-xs text-foreground/60 font-paragraph">
-                              <Calendar size={14} />
-                              {format(new Date(project.publicationDate), 'MMM yyyy')}
-                            </div>
-                          )}
-                          {project.projectUrl && (
-                            <ExternalLink size={16} className="text-primary" />
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <h2 className="text-xl font-medium mb-2 group-hover:text-muted transition-colors">
+                            {project.title}
+                          </h2>
+                          {project.shortDescription && (
+                            <p className="text-muted text-sm line-clamp-2">
+                              {project.shortDescription}
+                            </p>
                           )}
                         </div>
+                        <ArrowUpRight 
+                          size={20} 
+                          className="text-muted opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" 
+                        />
                       </div>
                     </Link>
                   ))}
                 </div>
 
                 {hasNext && (
-                  <div className="text-center mt-12">
+                  <div className="mt-16 text-center">
                     <button
                       onClick={() => loadProjects(skip)}
-                      disabled={isLoading}
-                      className="bg-primary text-white px-8 py-3 rounded-lg font-paragraph font-semibold hover:bg-primary/90 hover:scale-[1.02] transition-all duration-200 shadow-lg disabled:opacity-50"
+                      className="text-sm text-muted hover:text-foreground transition-colors"
                     >
-                      {isLoading ? 'Loading...' : 'Load More'}
+                      Load more projects
                     </button>
                   </div>
                 )}
               </>
             ) : (
-              <div className="text-center text-foreground/60 font-paragraph py-20">
-                No projects available yet.
+              <div className="py-20 text-center">
+                <p className="text-muted">No projects yet.</p>
               </div>
             )}
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
       <Footer />
-
-      <style>{`
-        @keyframes reveal {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-reveal {
-          animation: reveal 0.6s ease-out forwards;
-        }
-      `}</style>
     </div>
   );
 }
