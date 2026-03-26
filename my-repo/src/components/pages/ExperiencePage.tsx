@@ -138,7 +138,19 @@ export default function ExperiencePage() {
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
-                      <h3 className="font-medium">{comp.title}</h3>
+                      {comp.link ? (
+                        <a
+                          href={comp.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium hover:text-muted transition-colors inline-flex items-center gap-2"
+                        >
+                          {comp.title}
+                          <ExternalLink size={14} className="opacity-50" />
+                        </a>
+                      ) : (
+                        <h3 className="font-medium">{comp.title}</h3>
+                      )}
                       {comp.year && (
                         <span className="text-sm text-muted">{comp.year}</span>
                       )}
@@ -148,16 +160,6 @@ export default function ExperiencePage() {
                       {comp.description && ` — ${comp.description}`}
                     </p>
                   </div>
-                  {comp.link && (
-                    <a
-                      href={comp.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-muted hover:text-foreground transition-colors"
-                    >
-                      <ExternalLink size={18} />
-                    </a>
-                  )}
                 </div>
               ))}
             </div>

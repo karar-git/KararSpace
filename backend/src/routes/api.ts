@@ -29,12 +29,19 @@ router.get('/projects', async (req, res) => {
   }
 });
 
-// Public: Get single project by slug
-router.get('/projects/:slug', async (req, res) => {
+// Public: Get single project by ID or slug
+router.get('/projects/:idOrSlug', async (req, res) => {
   try {
-    const project = await prisma.project.findUnique({
-      where: { slug: req.params.slug },
+    const { idOrSlug } = req.params;
+    // Try finding by ID first, then by slug
+    let project = await prisma.project.findUnique({
+      where: { id: idOrSlug },
     });
+    if (!project) {
+      project = await prisma.project.findUnique({
+        where: { slug: idOrSlug },
+      });
+    }
     if (!project || !project.published) {
       return res.status(404).json({ error: 'Project not found' });
     }
@@ -108,11 +115,17 @@ router.get('/articles', async (req, res) => {
   }
 });
 
-router.get('/articles/:slug', async (req, res) => {
+router.get('/articles/:idOrSlug', async (req, res) => {
   try {
-    const article = await prisma.article.findUnique({
-      where: { slug: req.params.slug },
+    const { idOrSlug } = req.params;
+    let article = await prisma.article.findUnique({
+      where: { id: idOrSlug },
     });
+    if (!article) {
+      article = await prisma.article.findUnique({
+        where: { slug: idOrSlug },
+      });
+    }
     if (!article || !article.published) {
       return res.status(404).json({ error: 'Article not found' });
     }
@@ -235,11 +248,17 @@ router.get('/research', async (req, res) => {
   }
 });
 
-router.get('/research/:slug', async (req, res) => {
+router.get('/research/:idOrSlug', async (req, res) => {
   try {
-    const research = await prisma.research.findUnique({
-      where: { slug: req.params.slug },
+    const { idOrSlug } = req.params;
+    let research = await prisma.research.findUnique({
+      where: { id: idOrSlug },
     });
+    if (!research) {
+      research = await prisma.research.findUnique({
+        where: { slug: idOrSlug },
+      });
+    }
     if (!research) {
       return res.status(404).json({ error: 'Research not found' });
     }
