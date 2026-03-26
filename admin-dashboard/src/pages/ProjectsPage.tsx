@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { api } from '../lib/api';
-import { Plus, Pencil, Trash2, Eye, EyeOff, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, EyeOff, X, Upload, Image as ImageIcon } from 'lucide-react';
 
 interface Project {
   id: string;
@@ -114,8 +114,23 @@ export function ProjectsPage() {
           projects.map((project) => (
             <div
               key={project.id}
-              className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 flex items-center justify-between"
+              className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 flex items-center gap-4"
             >
+              {/* Thumbnail */}
+              <div className="w-20 h-14 bg-zinc-800 rounded overflow-hidden flex-shrink-0">
+                {project.mainImage ? (
+                  <img 
+                    src={project.mainImage} 
+                    alt={project.title} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-zinc-600">
+                    <ImageIcon size={20} />
+                  </div>
+                )}
+              </div>
+              
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <h3 className="text-lg font-semibold text-white">{project.title}</h3>
@@ -206,6 +221,9 @@ function ProjectModal({
 }) {
   const [form, setForm] = useState(project);
   const [tagInput, setTagInput] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -223,6 +241,43 @@ function ProjectModal({
     setForm({ ...form, tags: form.tags.filter((t) => t !== tag) });
   }
 
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('Image must be less than 10MB');
+      return;
+    }
+
+    setUploading(true);
+    setUploadError('');
+
+    try {
+      const result = await api.uploadImage(file);
+      setForm({ ...form, mainImage: result.url });
+    } catch (error: any) {
+      setUploadError(error.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }
+
+  function removeImage() {
+    setForm({ ...form, mainImage: undefined });
+  }
+
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -236,6 +291,66 @@ function ProjectModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Image Upload */}
+          <div>
+            <label className="block text-sm text-zinc-400 mb-2">Project Image</label>
+            <div className="space-y-3">
+              {form.mainImage ? (
+                <div className="relative">
+                  <img 
+                    src={form.mainImage} 
+                    alt="Project preview" 
+                    className="w-full h-48 object-cover rounded-lg border border-zinc-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-500 text-white rounded-full transition"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ) : (
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full h-48 border-2 border-dashed border-zinc-700 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-zinc-500 transition"
+                >
+                  {uploading ? (
+                    <div className="text-zinc-400">
+                      <div className="animate-spin w-8 h-8 border-2 border-zinc-500 border-t-white rounded-full mb-2 mx-auto" />
+                      <p className="text-sm">Uploading...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload size={32} className="text-zinc-500 mb-2" />
+                      <p className="text-zinc-400 text-sm">Click to upload image</p>
+                      <p className="text-zinc-600 text-xs mt-1">PNG, JPG up to 10MB</p>
+                    </>
+                  )}
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              {uploadError && (
+                <p className="text-red-400 text-sm">{uploadError}</p>
+              )}
+              {form.mainImage && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-sm text-zinc-400 hover:text-white transition"
+                >
+                  Change image
+                </button>
+              )}
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm text-zinc-400 mb-2">Title *</label>
             <input
@@ -377,7 +492,8 @@ function ProjectModal({
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-3 bg-white text-black rounded-lg hover:bg-zinc-200 transition"
+              disabled={uploading}
+              className="flex-1 px-4 py-3 bg-white text-black rounded-lg hover:bg-zinc-200 transition disabled:opacity-50"
             >
               {isNew ? 'Create' : 'Save'}
             </button>

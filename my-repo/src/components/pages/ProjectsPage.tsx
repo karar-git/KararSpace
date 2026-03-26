@@ -76,11 +76,19 @@ export default function ProjectsPage() {
                       className="group block"
                     >
                       <div className="aspect-[16/10] bg-border rounded-lg overflow-hidden mb-5">
-                        <img
-                          src={project.mainImage || `/images/project-${(index % 4) + 1}.jpg`}
-                          alt={project.title || ''}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
+                        {project.mainImage ? (
+                          <img
+                            src={project.mainImage}
+                            alt={project.title || ''}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-zinc-900">
+                            <span className="text-4xl font-medium text-zinc-700">
+                              {project.title?.charAt(0) || '?'}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-start justify-between gap-4">
                         <div>

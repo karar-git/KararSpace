@@ -29,8 +29,33 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
+// Upload image - special handling for FormData
+async function uploadImage(file: File): Promise<{ url: string; publicId: string }> {
+  const token = getToken();
+  const formData = new FormData();
+  formData.append('image', file);
+  
+  const res = await fetch(`${API_BASE}/upload`, {
+    method: 'POST',
+    headers: {
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    },
+    body: formData,
+  });
+  
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: 'Upload failed' }));
+    throw new Error(error.error || 'Upload failed');
+  }
+  
+  return res.json();
+}
+
 // Generic CRUD operations
 export const api = {
+  // Image upload
+  uploadImage,
+  
   // Projects
   getProjects: () => request<any[]>('/admin/projects'),
   createProject: (data: any) => request<any>('/admin/projects', { method: 'POST', body: JSON.stringify(data) }),
