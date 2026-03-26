@@ -36,15 +36,8 @@ export default function HomePage() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="section relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
-            <img 
-              src="/images/hero-bg.jpg" 
-              alt="" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="container relative">
+        <section className="section">
+          <div className="container">
             <div className="max-w-3xl">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium tracking-tighter text-balance mb-6">
                 Building things at the intersection of technology and human potential.
@@ -58,15 +51,8 @@ export default function HomePage() {
         </section>
 
         {/* Selected Work */}
-        <section className="section border-t border-border relative overflow-hidden">
-          <div className="absolute inset-0 opacity-5">
-            <img 
-              src="/images/project-1.jpg" 
-              alt="" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="container relative">
+        <section className="section border-t border-border">
+          <div className="container">
             <div className="flex items-baseline justify-between mb-12">
               <h2 className="text-sm font-medium text-muted uppercase tracking-wider">
                 Selected Work
@@ -80,38 +66,32 @@ export default function HomePage() {
             </div>
 
             {isLoading ? (
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-6">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="aspect-[16/10] bg-border rounded-lg mb-4" />
-                    <div className="h-4 bg-border rounded w-3/4 mb-2" />
-                    <div className="h-3 bg-border rounded w-1/2" />
+                  <div key={i} className="animate-pulse py-6 border-b border-border">
+                    <div className="h-5 bg-border rounded w-1/3 mb-2" />
+                    <div className="h-4 bg-border rounded w-2/3" />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 gap-x-8 gap-y-12">
-                {latestProjects.map((project, index) => (
+              <div className="divide-y divide-border">
+                {latestProjects.map((project) => (
                   <Link
                     key={project._id}
                     to={`/projects/${project._id}`}
-                    className="group block"
+                    className="group block py-6 first:pt-0"
                   >
-                    <div className="aspect-[16/10] bg-border rounded-lg overflow-hidden mb-4">
-                      <img
-                        src={project.mainImage || `/images/project-${(index % 4) + 1}.jpg`}
-                        alt={project.title || ''}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    </div>
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="text-lg font-medium mb-1 group-hover:text-muted transition-colors">
+                    <div className="flex items-start justify-between gap-8">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-medium mb-2 group-hover:text-muted transition-colors">
                           {project.title}
                         </h3>
-                        <p className="text-sm text-muted line-clamp-2">
-                          {project.shortDescription}
-                        </p>
+                        {project.shortDescription && (
+                          <p className="text-muted text-sm line-clamp-2">
+                            {project.shortDescription}
+                          </p>
+                        )}
                       </div>
                       <ArrowUpRight 
                         size={20} 

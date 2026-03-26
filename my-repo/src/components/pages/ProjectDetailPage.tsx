@@ -81,17 +81,6 @@ export default function ProjectDetailPage() {
               Work
             </Link>
 
-            {/* Hero Image */}
-            {project.mainImage && (
-              <div className="aspect-[16/9] bg-border rounded-lg overflow-hidden mb-12 -mx-6 md:mx-0">
-                <img
-                  src={project.mainImage}
-                  alt={project.title || ''}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-
             {/* Content */}
             <div className="max-w-content">
               {/* Title & Links */}

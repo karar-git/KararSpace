@@ -53,52 +53,48 @@ export default function ProjectsPage() {
           </div>
         </section>
 
-        {/* Projects Grid */}
+        {/* Projects List */}
         <section className="section">
           <div className="container">
             {isLoading ? (
-              <div className="grid md:grid-cols-2 gap-x-8 gap-y-16">
+              <div className="space-y-6">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="aspect-[16/10] bg-border rounded-lg mb-5" />
-                    <div className="h-5 bg-border rounded w-3/4 mb-2" />
-                    <div className="h-4 bg-border rounded w-full" />
+                  <div key={i} className="animate-pulse py-6 border-b border-border">
+                    <div className="h-5 bg-border rounded w-1/3 mb-2" />
+                    <div className="h-4 bg-border rounded w-2/3" />
                   </div>
                 ))}
               </div>
             ) : projects.length > 0 ? (
               <>
-                <div className="grid md:grid-cols-2 gap-x-8 gap-y-16">
-                  {projects.map((project, index) => (
+                <div className="divide-y divide-border">
+                  {projects.map((project) => (
                     <Link
                       key={project._id}
                       to={`/projects/${project._id}`}
-                      className="group block"
+                      className="group block py-8 first:pt-0"
                     >
-                      <div className="aspect-[16/10] bg-border rounded-lg overflow-hidden mb-5">
-                        {project.mainImage ? (
-                          <img
-                            src={project.mainImage}
-                            alt={project.title || ''}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-zinc-900">
-                            <span className="text-4xl font-medium text-zinc-700">
-                              {project.title?.charAt(0) || '?'}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
+                      <div className="flex items-start justify-between gap-8">
+                        <div className="flex-1 min-w-0">
                           <h2 className="text-xl font-medium mb-2 group-hover:text-muted transition-colors">
                             {project.title}
                           </h2>
                           {project.shortDescription && (
-                            <p className="text-muted text-sm line-clamp-2">
+                            <p className="text-muted line-clamp-2 mb-3">
                               {project.shortDescription}
                             </p>
+                          )}
+                          {project.tags && project.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {project.tags.map((tag: string) => (
+                                <span
+                                  key={tag}
+                                  className="text-xs text-muted px-2 py-1 border border-border rounded"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
                           )}
                         </div>
                         <ArrowUpRight 
@@ -111,7 +107,7 @@ export default function ProjectsPage() {
                 </div>
 
                 {hasNext && (
-                  <div className="mt-16 text-center">
+                  <div className="mt-12 text-center">
                     <button
                       onClick={() => loadProjects(skip)}
                       className="text-sm text-muted hover:text-foreground transition-colors"
