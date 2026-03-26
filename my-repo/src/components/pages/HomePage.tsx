@@ -36,8 +36,15 @@ export default function HomePage() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="section">
-          <div className="container">
+        <section className="section relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10">
+            <img 
+              src="/images/hero-bg.jpg" 
+              alt="" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="container relative">
             <div className="max-w-3xl">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium tracking-tighter text-balance mb-6">
                 Building things at the intersection of technology and human potential.
@@ -77,21 +84,19 @@ export default function HomePage() {
               </div>
             ) : (
               <div className="grid md:grid-cols-2 gap-x-8 gap-y-12">
-                {latestProjects.map((project) => (
+                {latestProjects.map((project, index) => (
                   <Link
                     key={project._id}
                     to={`/projects/${project._id}`}
                     className="group block"
                   >
-                    {project.mainImage && (
-                      <div className="aspect-[16/10] bg-border rounded-lg overflow-hidden mb-4">
-                        <img
-                          src={project.mainImage}
-                          alt={project.title || ''}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      </div>
-                    )}
+                    <div className="aspect-[16/10] bg-border rounded-lg overflow-hidden mb-4">
+                      <img
+                        src={project.mainImage || `/images/project-${(index % 4) + 1}.jpg`}
+                        alt={project.title || ''}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <h3 className="text-lg font-medium mb-1 group-hover:text-muted transition-colors">

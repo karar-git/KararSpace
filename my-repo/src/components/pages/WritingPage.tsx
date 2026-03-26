@@ -43,8 +43,15 @@ export default function WritingPage() {
 
       <main className="flex-1">
         {/* Header */}
-        <section className="section border-b border-border">
-          <div className="container">
+        <section className="section border-b border-border relative overflow-hidden">
+          <div className="absolute inset-0 opacity-5">
+            <img 
+              src="/images/writing-header.jpg" 
+              alt="" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="container relative">
             <h1 className="text-4xl md:text-5xl font-medium tracking-tighter mb-4">
               Writing
             </h1>
