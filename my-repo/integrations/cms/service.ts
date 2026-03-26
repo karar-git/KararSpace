@@ -3,8 +3,8 @@
  * Replaces Wix CMS with custom Express + PostgreSQL backend
  */
 
-// API Base URL - uses Railway backend in production
-const API_BASE_URL = import.meta.env.PUBLIC_API_URL || 'https://kararspace-production.up.railway.app/api';
+// API Base URL - uses Railway backend
+const API_BASE_URL = 'https://kararspace-production.up.railway.app/api';
 
 /**
  * Base item interface matching backend schema
