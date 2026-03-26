@@ -8,6 +8,7 @@ import {
   Award,
   FlaskConical,
   Sparkles,
+  Mail,
   Settings,
   LogOut,
   Menu,
@@ -21,6 +22,7 @@ const navigation = [
   { name: 'Certificates', href: '/certificates', icon: Award },
   { name: 'Research', href: '/research', icon: FlaskConical },
   { name: 'Opportunities', href: '/opportunities', icon: Sparkles },
+  { name: 'Subscribers', href: '/subscribers', icon: Mail },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

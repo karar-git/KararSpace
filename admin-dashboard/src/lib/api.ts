@@ -86,6 +86,11 @@ export const api = {
   updateOpportunity: (id: string, data: any) => request<any>(`/admin/opportunities/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteOpportunity: (id: string) => request<any>(`/admin/opportunities/${id}`, { method: 'DELETE' }),
 
+  // Subscribers
+  getSubscribers: () => request<any[]>('/admin/subscribers'),
+  getSubscriberCount: () => request<{ count: number }>('/admin/subscribers/count'),
+  deleteSubscriber: (id: string) => request<any>(`/admin/subscribers/${id}`, { method: 'DELETE' }),
+
   // Settings
   getSettings: () => request<any>('/settings'),
   updateSettings: (data: any) => request<any>('/admin/settings', { method: 'PUT', body: JSON.stringify(data) }),

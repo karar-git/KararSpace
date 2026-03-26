@@ -601,4 +601,96 @@ router.put('/admin/settings', authMiddleware, async (req: AuthRequest, res) => {
   }
 });
 
+// ============ SUBSCRIBERS ============
+
+// Public: Subscribe to newsletter
+router.post('/subscribe', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: 'Valid email is required' });
+    }
+
+    // Check if already subscribed
+    const existing = await prisma.subscriber.findUnique({ where: { email } });
+    if (existing) {
+      if (existing.unsubscribedAt) {
+        // Re-subscribe
+        await prisma.subscriber.update({
+          where: { email },
+          data: { unsubscribedAt: null, subscribedAt: new Date() },
+        });
+        return res.json({ success: true, message: 'Welcome back! You have been re-subscribed.' });
+      }
+      return res.json({ success: true, message: 'You are already subscribed!' });
+    }
+
+    await prisma.subscriber.create({
+      data: { email, verified: true }, // Auto-verify for simplicity
+    });
+
+    res.json({ success: true, message: 'Successfully subscribed!' });
+  } catch (error) {
+    console.error('Subscribe error:', error);
+    res.status(500).json({ error: 'Failed to subscribe' });
+  }
+});
+
+// Public: Unsubscribe from newsletter
+router.get('/unsubscribe/:email', async (req, res) => {
+  try {
+    const { email } = req.params;
+    
+    const subscriber = await prisma.subscriber.findUnique({ where: { email } });
+    if (!subscriber) {
+      return res.send('<h1>Email not found</h1><p>This email is not in our subscriber list.</p>');
+    }
+
+    await prisma.subscriber.update({
+      where: { email },
+      data: { unsubscribedAt: new Date() },
+    });
+
+    res.send('<h1>Unsubscribed</h1><p>You have been successfully unsubscribed. Sorry to see you go!</p>');
+  } catch (error) {
+    res.status(500).send('<h1>Error</h1><p>Failed to unsubscribe. Please try again.</p>');
+  }
+});
+
+// Admin: Get all subscribers
+router.get('/admin/subscribers', authMiddleware, async (req, res) => {
+  try {
+    const subscribers = await prisma.subscriber.findMany({
+      where: { unsubscribedAt: null },
+      orderBy: { subscribedAt: 'desc' },
+    });
+    res.json(subscribers);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch subscribers' });
+  }
+});
+
+// Admin: Get subscriber count
+router.get('/admin/subscribers/count', authMiddleware, async (req, res) => {
+  try {
+    const count = await prisma.subscriber.count({
+      where: { unsubscribedAt: null },
+    });
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to count subscribers' });
+  }
+});
+
+// Admin: Delete subscriber
+router.delete('/admin/subscribers/:id', authMiddleware, async (req, res) => {
+  try {
+    await prisma.subscriber.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete subscriber' });
+  }
+});
+
 export default router;

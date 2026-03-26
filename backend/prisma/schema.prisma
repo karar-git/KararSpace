@@ -146,3 +146,14 @@ model SiteSettings {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// Email Subscribers
+model Subscriber {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  verified     Boolean   @default(false)
+  subscribedAt DateTime  @default(now())
+  unsubscribedAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}

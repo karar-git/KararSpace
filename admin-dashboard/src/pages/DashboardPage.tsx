@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
-import { FolderKanban, FileText, Award, FlaskConical } from 'lucide-react';
+import { FolderKanban, FileText, Award, FlaskConical, Mail } from 'lucide-react';
 
 export function DashboardPage() {
   const [stats, setStats] = useState({
@@ -8,6 +8,7 @@ export function DashboardPage() {
     articles: 0,
     certificates: 0,
     research: 0,
+    subscribers: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -17,17 +18,19 @@ export function DashboardPage() {
 
   async function loadStats() {
     try {
-      const [projects, articles, certificates, research] = await Promise.all([
+      const [projects, articles, certificates, research, subscribersData] = await Promise.all([
         api.getProjects(),
         api.getArticles(),
         api.getCertificates(),
         api.getResearch(),
+        api.getSubscriberCount(),
       ]);
       setStats({
         projects: projects.length,
         articles: articles.length,
         certificates: certificates.length,
         research: research.length,
+        subscribers: subscribersData.count,
       });
     } catch (error) {
       console.error('Failed to load stats:', error);
@@ -41,13 +44,14 @@ export function DashboardPage() {
     { name: 'Articles', count: stats.articles, icon: FileText, color: 'from-blue-500 to-blue-600' },
     { name: 'Certificates', count: stats.certificates, icon: Award, color: 'from-green-500 to-green-600' },
     { name: 'Research', count: stats.research, icon: FlaskConical, color: 'from-orange-500 to-orange-600' },
+    { name: 'Subscribers', count: stats.subscribers, icon: Mail, color: 'from-pink-500 to-pink-600' },
   ];
 
   return (
     <div>
       <h1 className="text-3xl font-bold text-white mb-8">Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {cards.map((card) => (
           <div
             key={card.name}
