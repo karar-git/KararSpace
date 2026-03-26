@@ -3,12 +3,20 @@ const API_BASE = import.meta.env.PROD
   ? 'https://kararspace-production.up.railway.app/api'
   : '/api';
 
+const TOKEN_KEY = 'admin_token';
+
+function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
 async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const token = getToken();
+  
   const res = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
-    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...options?.headers,
     },
   });

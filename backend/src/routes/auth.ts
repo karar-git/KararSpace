@@ -22,6 +22,7 @@ router.post('/login', async (req, res) => {
 
     const token = generateToken(admin.id);
 
+    // Set cookie for same-origin requests
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -29,8 +30,10 @@ router.post('/login', async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
+    // Also return token in response for cross-origin requests (admin dashboard on different domain)
     res.json({ 
       success: true, 
+      token,
       admin: { id: admin.id, email: admin.email, name: admin.name } 
     });
   } catch (error) {

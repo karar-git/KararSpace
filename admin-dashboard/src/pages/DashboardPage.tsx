@@ -75,9 +75,7 @@ export function DashboardPage() {
             <li>• <strong className="text-zinc-300">Articles:</strong> Write blog posts and tutorials</li>
             <li>• <strong className="text-zinc-300">Certificates:</strong> Display your certifications</li>
             <li>• <strong className="text-zinc-300">Research:</strong> Share your research papers</li>
-            <li>• <strong className="text-zinc-300">Ideas:</strong> Quick notes and thoughts</li>
-            <li>• <strong className="text-zinc-300">Life:</strong> Personal blog entries</li>
-            <li>• <strong className="text-zinc-300">Now Focus:</strong> What you're currently working on</li>
+            <li>• <strong className="text-zinc-300">Opportunities:</strong> Share internships, scholarships, and programs</li>
             <li>• <strong className="text-zinc-300">Settings:</strong> Update your personal info and social links</li>
           </ul>
         </div>

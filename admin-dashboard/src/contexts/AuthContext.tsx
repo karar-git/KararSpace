@@ -5,6 +5,8 @@ const API_BASE = import.meta.env.PROD
   ? 'https://kararspace-production.up.railway.app/api'
   : '/api';
 
+const TOKEN_KEY = 'admin_token';
+
 interface Admin {
   id: string;
   email: string;
@@ -17,7 +19,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  getToken: () => string | null;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -30,15 +32,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
+  function getToken(): string | null {
+    return localStorage.getItem(TOKEN_KEY);
+  }
+
   async function checkAuth() {
+    const token = getToken();
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const res = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
+      const res = await fetch(`${API_BASE}/auth/me`, { 
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       const data = await res.json();
       if (data.authenticated) {
         setAdmin(data.admin);
+      } else {
+        // Token invalid, remove it
+        localStorage.removeItem(TOKEN_KEY);
       }
     } catch (error) {
       console.error('Auth check failed:', error);
+      localStorage.removeItem(TOKEN_KEY);
     } finally {
       setIsLoading(false);
     }
@@ -48,36 +68,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
       body: JSON.stringify({ email, password }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
+    
+    // Store token in localStorage
+    if (data.token) {
+      localStorage.setItem(TOKEN_KEY, data.token);
+    }
     setAdmin(data.admin);
   }
 
   async function logout() {
-    await fetch(`${API_BASE}/auth/logout`, {
-      method: 'POST',
-      credentials: 'include',
-    });
+    localStorage.removeItem(TOKEN_KEY);
     setAdmin(null);
   }
 
-  async function register(email: string, password: string, name: string) {
-    const res = await fetch(`${API_BASE}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ email, password, name }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error);
-    setAdmin(data.admin);
-  }
-
   return (
-    <AuthContext.Provider value={{ admin, isLoading, isAuthenticated: !!admin, login, logout, register }}>
+    <AuthContext.Provider value={{ admin, isLoading, isAuthenticated: !!admin, login, logout, getToken }}>
       {children}
     </AuthContext.Provider>
   );
