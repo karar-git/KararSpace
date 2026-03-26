@@ -54,6 +54,7 @@ const COLLECTION_TO_ENDPOINT: Record<string, string> = {
   'ideas': 'ideas',
   'lifecontent': 'life',
   'nowfocus': 'now',
+  'opportunities': 'opportunities',
   'settings': 'settings',
 };
 
