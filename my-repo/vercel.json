@@ -3,5 +3,16 @@
     "env": {
       "PUBLIC_API_URL": "https://kararspace-production.up.railway.app/api"
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "all"
+        }
+      ]
+    }
+  ]
 }
