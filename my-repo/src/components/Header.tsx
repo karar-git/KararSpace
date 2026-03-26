@@ -10,10 +10,8 @@ export default function Header() {
     { label: 'Work', path: '/projects' },
     { label: 'Writing', path: '/writing' },
     { label: 'Research', path: '/research' },
-    { label: 'Ideas', path: '/ideas' },
-    { label: 'Life', path: '/life' },
     { label: 'Certificates', path: '/certificates' },
-    { label: 'Now', path: '/now' },
+    { label: 'Experience', path: '/experience' },
     { label: 'Opportunities', path: '/opportunities' },
   ];
 

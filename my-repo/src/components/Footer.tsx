@@ -43,14 +43,8 @@ export default function Footer() {
               More
             </h4>
             <nav className="flex flex-col gap-2">
-              <Link to="/ideas" className="text-sm text-muted hover:text-foreground transition-colors">
-                Ideas
-              </Link>
-              <Link to="/life" className="text-sm text-muted hover:text-foreground transition-colors">
-                Life
-              </Link>
-              <Link to="/now" className="text-sm text-muted hover:text-foreground transition-colors">
-                Now
+              <Link to="/experience" className="text-sm text-muted hover:text-foreground transition-colors">
+                Experience
               </Link>
               <Link to="/opportunities" className="text-sm text-muted hover:text-foreground transition-colors">
                 Opportunities
@@ -65,10 +59,10 @@ export default function Footer() {
             © {currentYear} Karar Haitham
           </p>
           <a
-            href="mailto:addfgh177@gmail.com"
+            href="mailto:me@kararspace.com"
             className="text-sm text-muted hover:text-foreground transition-colors"
           >
-            addfgh177@gmail.com
+            me@kararspace.com
           </a>
         </div>
       </div>

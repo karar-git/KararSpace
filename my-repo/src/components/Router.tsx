@@ -3,17 +3,13 @@ import { ScrollToTop } from '@/lib/scroll-to-top';
 import HomePage from '@/components/pages/HomePage';
 import WritingPage from '@/components/pages/WritingPage';
 import ArticleDetailPage from '@/components/pages/ArticleDetailPage';
-import IdeasPage from '@/components/pages/IdeasPage';
-import IdeaDetailPage from '@/components/pages/IdeaDetailPage';
 import ProjectsPage from '@/components/pages/ProjectsPage';
 import ProjectDetailPage from '@/components/pages/ProjectDetailPage';
 import ResearchPage from '@/components/pages/ResearchPage';
 import ResearchDetailPage from '@/components/pages/ResearchDetailPage';
-import LifePage from '@/components/pages/LifePage';
-import LifeDetailPage from '@/components/pages/LifeDetailPage';
 import CertificatesPage from '@/components/pages/CertificatesPage';
-import NowPage from '@/components/pages/NowPage';
 import OpportunitiesPage from '@/components/pages/OpportunitiesPage';
+import ExperiencePage from '@/components/pages/ExperiencePage';
 
 // Simple error fallback
 function ErrorPage() {
@@ -59,14 +55,6 @@ const router = createBrowserRouter([
         element: <ArticleDetailPage />,
       },
       {
-        path: "ideas",
-        element: <IdeasPage />,
-      },
-      {
-        path: "ideas/:id",
-        element: <IdeaDetailPage />,
-      },
-      {
         path: "projects",
         element: <ProjectsPage />,
       },
@@ -83,20 +71,12 @@ const router = createBrowserRouter([
         element: <ResearchDetailPage />,
       },
       {
-        path: "life",
-        element: <LifePage />,
-      },
-      {
-        path: "life/:id",
-        element: <LifeDetailPage />,
-      },
-      {
         path: "certificates",
         element: <CertificatesPage />,
       },
       {
-        path: "now",
-        element: <NowPage />,
+        path: "experience",
+        element: <ExperiencePage />,
       },
       {
         path: "opportunities",

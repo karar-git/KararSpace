@@ -119,6 +119,19 @@ model NowFocus {
   updatedAt   DateTime @updatedAt
 }
 
+// Opportunities (shared opportunities for students/developers)
+model Opportunity {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  link        String?
+  type        String?   // e.g., "internship", "scholarship", "competition", "program"
+  deadline    DateTime?
+  published   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
 // Site Settings (personal info, social links, etc.)
 model SiteSettings {
   id          String   @id @default("main")

@@ -58,8 +58,15 @@ export default function HomePage() {
         </section>
 
         {/* Selected Work */}
-        <section className="section border-t border-border">
-          <div className="container">
+        <section className="section border-t border-border relative overflow-hidden">
+          <div className="absolute inset-0 opacity-5">
+            <img 
+              src="/images/project-1.jpg" 
+              alt="" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="container relative">
             <div className="flex items-baseline justify-between mb-12">
               <h2 className="text-sm font-medium text-muted uppercase tracking-wider">
                 Selected Work
@@ -187,9 +194,9 @@ export default function HomePage() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 { label: 'Research', path: '/research', desc: 'Academic papers and studies' },
-                { label: 'Ideas', path: '/ideas', desc: 'Quick thoughts and notes' },
-                { label: 'Certificates', path: '/certificates', desc: 'Credentials and achievements' },
-                { label: 'Now', path: '/now', desc: 'Current focus and activities' },
+                { label: 'Certificates', path: '/certificates', desc: 'Courses and credentials' },
+                { label: 'Experience', path: '/experience', desc: 'Work and competitions' },
+                { label: 'Opportunities', path: '/opportunities', desc: 'Programs worth checking out' },
               ].map(({ label, path, desc }) => (
                 <Link
                   key={path}

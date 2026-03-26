@@ -498,6 +498,61 @@ router.delete('/admin/now/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// ============ OPPORTUNITIES ============
+
+router.get('/opportunities', async (req, res) => {
+  try {
+    const opportunities = await prisma.opportunity.findMany({
+      where: { published: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(opportunities);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch opportunities' });
+  }
+});
+
+router.get('/admin/opportunities', authMiddleware, async (req, res) => {
+  try {
+    const opportunities = await prisma.opportunity.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(opportunities);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch opportunities' });
+  }
+});
+
+router.post('/admin/opportunities', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const opportunity = await prisma.opportunity.create({ data: req.body });
+    res.json(opportunity);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create opportunity' });
+  }
+});
+
+router.put('/admin/opportunities/:id', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const opportunity = await prisma.opportunity.update({
+      where: { id: req.params.id },
+      data: req.body,
+    });
+    res.json(opportunity);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update opportunity' });
+  }
+});
+
+router.delete('/admin/opportunities/:id', authMiddleware, async (req, res) => {
+  try {
+    await prisma.opportunity.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete opportunity' });
+  }
+});
+
 // ============ SITE SETTINGS ============
 
 router.get('/settings', async (req, res) => {
