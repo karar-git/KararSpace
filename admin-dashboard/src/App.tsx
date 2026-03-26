@@ -7,7 +7,8 @@ import { ProjectsPage } from './pages/ProjectsPage';
 import { ArticlesPage } from './pages/ArticlesPage';
 import { CertificatesPage } from './pages/CertificatesPage';
 import { SettingsPage } from './pages/SettingsPage';
-import { ResearchPage, IdeasPage, LifePage, NowFocusPage } from './pages/OtherPages';
+import { ResearchPage } from './pages/OtherPages';
+import { OpportunitiesPage } from './pages/OpportunitiesPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -59,9 +60,7 @@ function AppRoutes() {
         <Route path="articles" element={<ArticlesPage />} />
         <Route path="certificates" element={<CertificatesPage />} />
         <Route path="research" element={<ResearchPage />} />
-        <Route path="ideas" element={<IdeasPage />} />
-        <Route path="life" element={<LifePage />} />
-        <Route path="now" element={<NowFocusPage />} />
+        <Route path="opportunities" element={<OpportunitiesPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

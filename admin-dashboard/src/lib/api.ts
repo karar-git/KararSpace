@@ -47,23 +47,11 @@ export const api = {
   updateResearch: (id: string, data: any) => request<any>(`/admin/research/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteResearch: (id: string) => request<any>(`/admin/research/${id}`, { method: 'DELETE' }),
 
-  // Ideas
-  getIdeas: () => request<any[]>('/admin/ideas'),
-  createIdea: (data: any) => request<any>('/admin/ideas', { method: 'POST', body: JSON.stringify(data) }),
-  updateIdea: (id: string, data: any) => request<any>(`/admin/ideas/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deleteIdea: (id: string) => request<any>(`/admin/ideas/${id}`, { method: 'DELETE' }),
-
-  // Life Content
-  getLifeContent: () => request<any[]>('/admin/life'),
-  createLifeContent: (data: any) => request<any>('/admin/life', { method: 'POST', body: JSON.stringify(data) }),
-  updateLifeContent: (id: string, data: any) => request<any>(`/admin/life/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deleteLifeContent: (id: string) => request<any>(`/admin/life/${id}`, { method: 'DELETE' }),
-
-  // Now Focus
-  getNowFocus: () => request<any[]>('/admin/now'),
-  createNowFocus: (data: any) => request<any>('/admin/now', { method: 'POST', body: JSON.stringify(data) }),
-  updateNowFocus: (id: string, data: any) => request<any>(`/admin/now/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deleteNowFocus: (id: string) => request<any>(`/admin/now/${id}`, { method: 'DELETE' }),
+  // Opportunities
+  getOpportunities: () => request<any[]>('/admin/opportunities'),
+  createOpportunity: (data: any) => request<any>('/admin/opportunities', { method: 'POST', body: JSON.stringify(data) }),
+  updateOpportunity: (id: string, data: any) => request<any>(`/admin/opportunities/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteOpportunity: (id: string) => request<any>(`/admin/opportunities/${id}`, { method: 'DELETE' }),
 
   // Settings
   getSettings: () => request<any>('/settings'),

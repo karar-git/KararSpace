@@ -7,9 +7,7 @@ import {
   FileText,
   Award,
   FlaskConical,
-  Lightbulb,
-  Heart,
-  Zap,
+  Sparkles,
   Settings,
   LogOut,
   Menu,
@@ -22,9 +20,7 @@ const navigation = [
   { name: 'Articles', href: '/articles', icon: FileText },
   { name: 'Certificates', href: '/certificates', icon: Award },
   { name: 'Research', href: '/research', icon: FlaskConical },
-  { name: 'Ideas', href: '/ideas', icon: Lightbulb },
-  { name: 'Life', href: '/life', icon: Heart },
-  { name: 'Now Focus', href: '/now', icon: Zap },
+  { name: 'Opportunities', href: '/opportunities', icon: Sparkles },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
