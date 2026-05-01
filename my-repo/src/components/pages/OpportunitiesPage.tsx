@@ -15,13 +15,21 @@ interface Opportunity {
   createdAt?: string;
 }
 
-const featuredGuide = {
-  title: 'Huawei certifications in Iraq: free vouchers for students',
-  description:
-    'A practical guide for checking whether your university has Huawei ICT Academy or instructor access, how to ask for an exam voucher, and what to prepare before registration.',
-  type: 'Guide',
-  href: '/huawei-free-certifications-iraq',
-};
+function getInternalPath(link?: string) {
+  if (!link) return null;
+  if (link.startsWith('/')) return link;
+
+  try {
+    const url = new URL(link);
+    if (url.hostname === 'kararspace.com' || url.hostname === 'www.kararspace.com') {
+      return `${url.pathname}${url.search}${url.hash}`;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
 
 export default function OpportunitiesPage() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
@@ -74,39 +82,15 @@ export default function OpportunitiesPage() {
               </div>
             ) : opportunities.length > 0 ? (
               <div className="space-y-6">
-                <Link
-                  to={featuredGuide.href}
-                  className="group block p-6 border border-border rounded-lg hover:border-border-hover transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex flex-wrap items-center gap-3 mb-2">
-                        <h2 className="text-lg font-medium group-hover:text-muted transition-colors">
-                          {featuredGuide.title}
-                        </h2>
-                        <span className="px-2 py-0.5 bg-border/50 rounded text-xs text-muted">
-                          {featuredGuide.type}
-                        </span>
-                      </div>
-                      <p className="text-muted text-sm leading-relaxed">
-                        {featuredGuide.description}
-                      </p>
-                    </div>
-                    <ArrowUpRight
-                      size={20}
-                      className="text-muted group-hover:text-foreground transition-colors flex-shrink-0 mt-1"
-                    />
-                  </div>
-                </Link>
-                {opportunities.map((opp) => (
-                  <div
-                    key={opp._id}
-                    className="p-6 border border-border rounded-lg hover:border-border-hover transition-colors"
-                  >
+                {opportunities.map((opp) => {
+                  const internalPath = getInternalPath(opp.link);
+                  const content = (
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h2 className="text-lg font-medium">{opp.title}</h2>
+                          <h2 className="text-lg font-medium group-hover:text-muted transition-colors">
+                            {opp.title}
+                          </h2>
                           {opp.type && (
                             <span className="px-2 py-0.5 bg-border/50 rounded text-xs text-muted">
                               {opp.type}
@@ -120,61 +104,72 @@ export default function OpportunitiesPage() {
                         )}
                         {opp.deadline && (
                           <p className="text-sm text-muted">
-                            Deadline: {new Date(opp.deadline).toLocaleDateString('en-US', { 
-                              month: 'long', 
-                              day: 'numeric', 
-                              year: 'numeric' 
+                            Deadline: {new Date(opp.deadline).toLocaleDateString('en-US', {
+                              month: 'long',
+                              day: 'numeric',
+                              year: 'numeric'
                             })}
                           </p>
                         )}
                       </div>
                       {opp.link && (
-                        <a
-                          href={opp.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-shrink-0 p-2 text-muted hover:text-foreground transition-colors"
-                        >
-                          <ExternalLink size={20} />
-                        </a>
+                        internalPath ? (
+                          <ArrowUpRight
+                            size={20}
+                            className="text-muted group-hover:text-foreground transition-colors flex-shrink-0 mt-1"
+                          />
+                        ) : (
+                          <ExternalLink
+                            size={20}
+                            className="text-muted group-hover:text-foreground transition-colors flex-shrink-0 mt-1"
+                          />
+                        )
                       )}
                     </div>
-                  </div>
-                ))}
+                  );
+
+                  if (internalPath) {
+                    return (
+                      <Link
+                        key={opp._id}
+                        to={internalPath}
+                        className="group block p-6 border border-border rounded-lg hover:border-border-hover transition-colors"
+                      >
+                        {content}
+                      </Link>
+                    );
+                  }
+
+                  if (opp.link) {
+                    return (
+                      <a
+                        key={opp._id}
+                        href={opp.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group block p-6 border border-border rounded-lg hover:border-border-hover transition-colors"
+                      >
+                        {content}
+                      </a>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={opp._id}
+                      className="p-6 border border-border rounded-lg"
+                    >
+                      {content}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
-              <div className="space-y-6">
-                <Link
-                  to={featuredGuide.href}
-                  className="group block p-6 border border-border rounded-lg hover:border-border-hover transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex flex-wrap items-center gap-3 mb-2">
-                        <h2 className="text-lg font-medium group-hover:text-muted transition-colors">
-                          {featuredGuide.title}
-                        </h2>
-                        <span className="px-2 py-0.5 bg-border/50 rounded text-xs text-muted">
-                          {featuredGuide.type}
-                        </span>
-                      </div>
-                      <p className="text-muted text-sm leading-relaxed">
-                        {featuredGuide.description}
-                      </p>
-                    </div>
-                    <ArrowUpRight
-                      size={20}
-                      className="text-muted group-hover:text-foreground transition-colors flex-shrink-0 mt-1"
-                    />
-                  </div>
-                </Link>
-
-                <div className="py-16 text-center">
-                  <p className="text-muted mb-2">More opportunities coming soon.</p>
-                  <p className="text-sm text-muted">
-                    I'll keep adding useful programs as I find them.
-                  </p>
-                </div>
+              <div className="py-20 text-center">
+                <p className="text-muted mb-2">No opportunities posted yet.</p>
+                <p className="text-sm text-muted">
+                  Check back soon — I'll share interesting opportunities as I find them.
+                </p>
               </div>
             )}
           </div>
