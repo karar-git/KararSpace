@@ -13,6 +13,7 @@ export default function Header() {
     { label: 'Certificates', path: '/certificates' },
     { label: 'Experience', path: '/experience' },
     { label: 'Opportunities', path: '/opportunities' },
+    { label: 'Planning', path: '/planning' },
   ];
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');

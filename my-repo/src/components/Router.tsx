@@ -11,6 +11,7 @@ import CertificatesPage from '@/components/pages/CertificatesPage';
 import OpportunitiesPage from '@/components/pages/OpportunitiesPage';
 import HuaweiFreeCertificationsIraqPage from '@/components/pages/HuaweiFreeCertificationsIraqPage';
 import ExperiencePage from '@/components/pages/ExperiencePage';
+import PlanningPage from '@/components/pages/PlanningPage';
 
 // Simple error fallback
 function ErrorPage() {
@@ -82,6 +83,10 @@ const router = createBrowserRouter([
       {
         path: "opportunities",
         element: <OpportunitiesPage />,
+      },
+      {
+        path: "planning",
+        element: <PlanningPage />,
       },
       {
         path: "huawei-free-certifications-iraq",
