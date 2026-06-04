@@ -58,6 +58,8 @@ input,textarea,select{font-family:inherit;}
 .brand .sub{font-family:var(--mono);font-size:10.5px;color:var(--muted-2);letter-spacing:.5px;}
 .tb-sep{width:1px;height:24px;background:var(--border);margin:0 4px;}
 .tb-spacer{flex:1;}
+.tb-meta{font-family:var(--mono);font-size:11px;color:var(--muted-2);letter-spacing:.3px;}
+.notes-only{display:none;}
 .btn{
   display:inline-flex;align-items:center;gap:6px;
   height:32px;padding:0 11px;border-radius:8px;
@@ -252,6 +254,13 @@ input,textarea,select{font-family:inherit;}
 .clear-photo{font-size:10px;color:var(--muted-2);background:none;border:none;text-decoration:underline;padding:0;text-align:left;}
 .clear-photo:hover{color:var(--muted);}
 .tm-note{font-size:11.5px;color:var(--muted);line-height:1.5;margin:6px 2px 14px;}
+.person-edit{
+  width:100%;background:transparent;border:1px solid transparent;border-radius:7px;
+  color:var(--text);outline:none;padding:3px 5px;margin-left:-5px;
+}
+.person-edit.name{font-weight:600;font-size:13.5px;}
+.person-edit.role{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:2px;}
+.person-edit:focus{background:var(--surface-2);border-color:var(--sel);box-shadow:0 0 0 3px rgba(76,194,255,.14);}
 .shared-card{background:var(--surface-2);}
 .shared-card .savs{display:flex;}
 .shared-card .savs .sa{width:30px;height:30px;border-radius:50%;margin-left:-9px;background-size:cover;background-position:center;
@@ -338,8 +347,162 @@ input,textarea,select{font-family:inherit;}
 .flow-arrow{fill:none;stroke:rgba(180,190,200,0.42);stroke-width:1.8;}
 @keyframes flowIn{from{opacity:0;transform:translateY(12px) scale(.95);}to{opacity:1;transform:none;}}
 
+/* ---------- notes tab ---------- */
+#notes-board{
+  position:absolute;inset:54px 0 0 0;
+  display:none;grid-template-columns:repeat(3,1fr);
+  gap:18px;padding:22px 22px 0;
+  background:
+    radial-gradient(1200px 700px at 25% -10%, rgba(76,194,255,0.05), transparent 60%),
+    radial-gradient(900px 600px at 92% 112%, rgba(192,132,252,0.05), transparent 60%),
+    var(--bg);
+  overflow:auto;
+}
+.notes-col{
+  display:flex;flex-direction:column;min-height:0;
+  background:rgba(255,255,255,0.018);
+  border:1px solid var(--border);
+  border-top:3px solid var(--accent,var(--muted-2));
+  border-radius:16px 16px 0 0;
+  box-shadow:0 12px 34px rgba(0,0,0,0.24);
+  overflow:hidden;
+}
+.notes-col-head{
+  display:flex;align-items:center;gap:12px;
+  padding:16px 16px 14px;border-bottom:1px solid var(--border);
+}
+.notes-avatar{
+  width:42px;height:42px;border-radius:50%;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:15px;color:#0f1419;
+  background:var(--accent);
+  background-size:cover;background-position:center;
+  box-shadow:0 0 0 3px var(--bg), 0 0 0 5px var(--accent), 0 4px 10px rgba(0,0,0,.5);
+  user-select:none;
+}
+.notes-col-id{flex:1;min-width:0;}
+.notes-col-name{font-weight:650;font-size:14.5px;letter-spacing:-.1px;}
+.notes-col-role{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:2px;letter-spacing:.2px;}
+.notes-col-count{
+  font-family:var(--mono);font-size:10px;letter-spacing:.5px;color:var(--muted-2);
+  border:1px solid var(--border);border-radius:20px;padding:3px 9px;flex:none;
+}
+.notes-composer{padding:12px 14px;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.12);}
+.notes-from{
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;
+  font-family:var(--mono);font-size:10.5px;color:var(--muted-2);letter-spacing:.4px;text-transform:uppercase;
+}
+.notes-from select{
+  flex:1;min-width:0;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:7px 9px;color:var(--text);font-size:12px;outline:none;text-transform:none;letter-spacing:0;
+}
+.notes-from select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(76,194,255,.14);}
+.notes-composer textarea{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;line-height:1.45;
+  outline:none;resize:none;min-height:42px;transition:border-color .12s,box-shadow .12s;
+}
+.notes-composer textarea::placeholder{color:var(--muted-2);}
+.notes-composer textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(76,194,255,.14);}
+.notes-comp-refs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.notes-comp-refs:empty{display:none;}
+.notes-comp-foot{display:flex;align-items:center;gap:8px;margin-top:9px;}
+.notes-ref-btn{
+  display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:8px;
+  background:var(--surface-2);border:1px solid var(--border);font-size:12px;font-weight:500;color:var(--muted);
+}
+.notes-ref-btn:hover{background:var(--surface-3);border-color:var(--border-strong);color:var(--text);}
+.notes-ref-btn .hash{font-family:var(--mono);color:var(--accent);font-weight:700;}
+.notes-post-btn{
+  margin-left:auto;height:30px;padding:0 15px;border-radius:8px;font-size:12.5px;font-weight:600;
+  background:var(--accent);border:1px solid transparent;color:#0f1419;
+  opacity:.4;pointer-events:none;transition:opacity .12s,transform .06s;
+}
+.notes-post-btn.on{opacity:1;pointer-events:auto;}
+.notes-post-btn:active{transform:translateY(1px);}
+.notes-list{flex:1;overflow-y:auto;padding:12px 14px 22px;display:flex;flex-direction:column;gap:11px;}
+.notes-empty{
+  margin:auto;text-align:center;color:var(--muted-2);font-size:12.5px;line-height:1.6;padding:40px 18px;
+}
+.notes-empty .ico{font-size:22px;opacity:.5;display:block;margin-bottom:8px;}
+.note{
+  position:relative;background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:12px 13px 11px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.22);
+  animation:noteIn .26s cubic-bezier(.2,.7,.3,1) both;
+}
+@keyframes noteIn{from{opacity:0;transform:translateY(8px) scale(.98);}to{opacity:1;transform:none;}}
+.note-head{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.note-av{
+  width:22px;height:22px;border-radius:50%;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:9px;color:#0f1419;background:var(--author);
+  background-size:cover;background-position:center;
+  box-shadow:0 0 0 2px var(--author);
+}
+.note-author{font-size:12px;font-weight:600;}
+.note-time{font-family:var(--mono);font-size:10px;color:var(--muted-2);margin-left:auto;letter-spacing:.2px;}
+.note-del{
+  width:20px;height:20px;border-radius:6px;border:1px solid transparent;background:transparent;
+  color:var(--muted-2);font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .12s,background .12s,color .12s;flex:none;
+}
+.note:hover .note-del{opacity:1;}
+.note-del:hover{background:#2a1a1d;color:#ffb4b8;border-color:#5a2a30;}
+.note-body{font-size:13px;line-height:1.5;color:var(--text);text-wrap:pretty;white-space:pre-wrap;word-break:break-word;}
+.note-refs{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;max-width:100%;
+  height:24px;padding:0 9px 0 8px;border-radius:7px;
+  background:var(--surface-2);border:1px solid var(--border-strong);
+  font-size:11px;color:var(--text);cursor:default;
+}
+.chip .cdot{width:7px;height:7px;border-radius:50%;flex:none;background:var(--cdot,var(--muted-2));}
+.chip .ctxt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.chip .cweek{font-family:var(--mono);font-size:9px;color:var(--muted-2);letter-spacing:.5px;flex:none;}
+.chip .cx{margin-left:1px;color:var(--muted-2);font-size:13px;line-height:1;cursor:pointer;}
+.chip .cx:hover{color:var(--text);}
+.chip.gate{border-color:rgba(148,163,184,0.5);}
+#notes-scrim{position:fixed;inset:0;z-index:70;display:none;}
+#notes-scrim.show{display:block;}
+.notes-popover{
+  position:fixed;z-index:71;width:340px;max-height:60vh;display:none;flex-direction:column;
+  background:var(--bg-2);border:1px solid var(--border-strong);border-radius:14px;
+  box-shadow:0 22px 60px rgba(0,0,0,0.6);overflow:hidden;
+}
+.notes-popover.show{display:flex;}
+.notes-pop-head{padding:13px 14px 11px;border-bottom:1px solid var(--border);}
+.notes-pop-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:9px;display:flex;align-items:center;gap:7px;}
+.notes-pop-title .hash{font-family:var(--mono);color:var(--accent,#4cc2ff);}
+.notes-pop-search{
+  width:100%;background:var(--surface);border:1px solid var(--border);border-radius:9px;
+  padding:8px 11px;color:var(--text);font-size:12.5px;outline:none;
+}
+.notes-pop-search:focus{border-color:var(--sel);box-shadow:0 0 0 3px rgba(76,194,255,.14);}
+.notes-pop-list{overflow-y:auto;padding:6px;}
+.notes-pop-week{font-family:var(--mono);font-size:9.5px;letter-spacing:1px;color:var(--muted-2);text-transform:uppercase;padding:10px 8px 5px;}
+.notes-pop-item{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  padding:8px 9px;border-radius:9px;background:transparent;border:1px solid transparent;font-size:12.5px;color:var(--text);
+}
+.notes-pop-item:hover{background:var(--surface-2);}
+.notes-pop-item.sel{background:var(--surface-3);border-color:var(--border-strong);}
+.notes-pop-item .pdot{width:8px;height:8px;border-radius:50%;flex:none;}
+.notes-pop-item .ptxt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.notes-pop-item .pcheck{font-family:var(--mono);font-size:13px;color:var(--accent,#4cc2ff);width:14px;text-align:center;opacity:0;flex:none;}
+.notes-pop-item.sel .pcheck{opacity:1;}
+.notes-pop-item .prole{width:22px;height:22px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:700;color:#0f1419;}
+.notes-pop-foot{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:9px;}
+.notes-pop-foot .cnt{font-family:var(--mono);font-size:10.5px;color:var(--muted-2);}
+.notes-pop-done{margin-left:auto;height:30px;padding:0 15px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);font-size:12px;font-weight:600;}
+.notes-pop-done:hover{background:var(--surface-3);border-color:var(--border-strong);}
+@media (max-width: 980px){
+  #notes-board{grid-template-columns:1fr;overflow-y:auto;}
+  .notes-col{min-height:520px;}
+}
+
 @media print{
-  #toolbar,#editor,#team,#scrim,#legend,#zoomctl{display:none !important;}
+  #toolbar,#editor,#team,#scrim,#notes-scrim,#legend,#zoomctl,.notes-popover,#notes-board{display:none !important;}
   #stage{position:static;inset:auto;background:#fff;}
   body{background:#fff;overflow:visible;}
   .card{box-shadow:none;}
@@ -360,19 +523,25 @@ input,textarea,select{font-family:inherit;}
     </div>
   </div>
   <div class="tb-sep"></div>
-  <div class="seg-toggle" id="layout-toggle">
+  <div class="seg-toggle" id="view-toggle">
+    <button data-view="planner">⌷ Planner</button>
+    <button data-view="notes">✎ Notes</button>
+  </div>
+  <div class="tb-sep planner-only"></div>
+  <div class="seg-toggle planner-only" id="layout-toggle">
     <button data-layout="flow">⬚ Flow</button>
     <button data-layout="tree">⌷ Tree</button>
   </div>
-  <div class="tb-sep"></div>
-  <button class="btn" id="btn-team"><span class="ic">●</span> Team</button>
-  <button class="btn primary" id="btn-add-root"><span class="ic">＋</span> Add root task</button>
-  <button class="btn" id="btn-expand">Expand all</button>
-  <button class="btn" id="btn-collapse">Collapse all</button>
-  <div class="tb-sep"></div>
-  <button class="btn" id="btn-export">Export JSON</button>
-  <button class="btn" id="btn-import">Import JSON</button>
-  <button class="btn" id="btn-png">Export PNG</button>
+  <div class="tb-sep planner-only"></div>
+  <button class="btn planner-only" id="btn-team"><span class="ic">●</span> Team</button>
+  <button class="btn primary planner-only" id="btn-add-root"><span class="ic">＋</span> Add root task</button>
+  <button class="btn planner-only" id="btn-expand">Expand all</button>
+  <button class="btn planner-only" id="btn-collapse">Collapse all</button>
+  <div class="tb-sep planner-only"></div>
+  <button class="btn planner-only" id="btn-export">Export JSON</button>
+  <button class="btn planner-only" id="btn-import">Import JSON</button>
+  <button class="btn planner-only" id="btn-png">Export PNG</button>
+  <span class="tb-meta notes-only">write in a teammate's box · choose sender · ＃ references a task</span>
   <div class="tb-spacer"></div>
   <button class="btn danger" id="btn-reset">Reset to template</button>
 </div>
@@ -388,6 +557,8 @@ input,textarea,select{font-family:inherit;}
     <button class="btn primary" id="empty-add">＋ Add a root task</button>
   </div>
 </div>
+
+<div id="notes-board" aria-label="Team notes"></div>
 
 <div class="hint" id="hint">drag canvas to pan · scroll to zoom · click a node to edit · double-click title to rename</div>
 
@@ -441,6 +612,20 @@ input,textarea,select{font-family:inherit;}
   <div class="tm-body" id="tm-body"></div>
 </aside>
 
+<!-- Notes task picker -->
+<div id="notes-scrim"></div>
+<div class="notes-popover" id="notes-popover">
+  <div class="notes-pop-head">
+    <div class="notes-pop-title"><span class="hash">＃</span> Reference a task</div>
+    <input type="text" class="notes-pop-search" id="notes-pop-search" placeholder="Search tasks…" />
+  </div>
+  <div class="notes-pop-list" id="notes-pop-list"></div>
+  <div class="notes-pop-foot">
+    <span class="cnt" id="notes-pop-cnt">0 selected</span>
+    <button class="notes-pop-done" id="notes-pop-done">Done</button>
+  </div>
+</div>
+
 <!-- Legend -->
 <div id="legend"></div>
 
@@ -457,7 +642,7 @@ input,textarea,select{font-family:inherit;}
 
 <script>
 "use strict";
-const LS_KEY = "deepworld-planner-v2";
+const LS_KEY = "deepworld-planner-v3";
 
 /* ---------------- helpers ---------------- */
 const $ = s => document.querySelector(s);
@@ -475,9 +660,9 @@ function seedPeople(){
   return {
     order: ["researcher","designer","engineer"],
     map: {
-      researcher:{ id:"researcher", name:"Researcher",  role:"Modeling & Evaluation", color:"#34d399", photo:null },
-      designer:  { id:"designer",   name:"Designer",    role:"UX & Frontend",        color:"#c084fc", photo:null },
-      engineer:  { id:"engineer",   name:"AI Engineer", role:"Backend & LLM",        color:"#fbbf24", photo:null },
+      researcher:{ id:"researcher", name:"Person 1", role:"Teammate", color:"#34d399", photo:null },
+      designer:  { id:"designer",   name:"Person 2", role:"Teammate", color:"#c084fc", photo:null },
+      engineer:  { id:"engineer",   name:"Person 3", role:"Teammate", color:"#fbbf24", photo:null },
       shared:    { id:"shared",     name:"Shared",      role:"Cross-team",           color:"#94a3b8", photo:null }
     }
   };
@@ -485,68 +670,82 @@ function seedPeople(){
 function mk(kind, title, opts){
   return Object.assign({ id:uid(), kind, title, desc:"", status:"todo", assignee:null, weekLabel:null, collapsed:false, children:[] }, opts||{});
 }
-function task(assignee, title, desc){ return mk("task", title, { assignee, desc:desc||"" }); }
+function task(title, desc){ return mk("task", title, { assignee:null, desc:desc||"" }); }
 
 function seedForest(){
-  const root = mk("root", "Deep World — 3-Week Build", { status:"inprogress", assignee:"shared",
-    desc:"A society-scale opinion-dynamics simulator." });
+  const root = mk("root", "Deep World — NurAI Build Plan", { status:"inprogress", assignee:null,
+    desc:"Times are working days. Streams run in parallel across the 3 of you, so the wall-clock target is about 3 weeks." });
 
-  const w1 = mk("week","Foundations & Contracts",{ weekLabel:"WEEK 1", assignee:"shared",
-    desc:"Specs, scaffolds and the locked interface." });
-  w1.children = [
-    task("researcher","Persona & opinion model spec","Traits (openness, resistance, influence) + {accept / reject}, latent value & thresholds"),
-    task("researcher","Curate 2 seed societies","Real demographic grounding"),
-    task("researcher","Draft reasoning + final-report prompts"),
-    task("designer","IA + wireframes for 3 screens","Home, Setup, Live Results"),
-    task("designer","Design system","Color, type, core components"),
-    task("engineer","FastAPI scaffold","config/.env + run script"),
-    task("engineer","Provider-agnostic LLM client","SSE streaming skeleton"),
-    task("shared","★ GATE: Lock the API + SSE event contract","The data schema both sides build against")
+  const ai = mk("week","AI Core — the algorithm",{ weekLabel:"AI CORE", assignee:null,
+    desc:"~10.5 working days" });
+  ai.children = [
+    task("[1d] Find the method","List 3 ways to make a city react, pick 1. Look: Generative Agents (Park 2023), opinion dynamics, OASIS/CAMEL-AI."),
+    task("[2d] Build v0 (tiny)","10 citizens, 1 idea, 3 days, runs end-to-end."),
+    task("[0.5d] Test v0","Read the 10 reactions, note the weakest part."),
+    task("[0.5d] Find something better","Pick one fix: memory, influence, or real LLM reasoning."),
+    task("[1.5d] Build v1","Add the chosen fix."),
+    task("[0.5d] Test v1","Compare to v0."),
+    task("[3d] Repeat until good","Loop improve and test. Bar: feels human and differs per person."),
+    task("[1.5d] Scale cheaply","LLM for a sample, simple math for the rest.")
   ];
 
-  const w2 = mk("week","Core Build",{ weekLabel:"WEEK 2", assignee:"shared", collapsed:true,
-    desc:"Engine, dashboard and detail UI." });
-  w2.children = [
-    task("engineer","Hybrid engine","Deep LLM batch reasoning + statistical population propagation"),
-    task("engineer","Memory log + influence graph","Find super-spreaders"),
-    task("engineer","Report generation + per-agent chat endpoint"),
-    task("engineer","Heuristic fallback","Works with no LLM key"),
-    task("designer","Build Setup screen","World, idea, pressure sliders, channels"),
-    task("designer","Build Live dashboard","Society swarm, opinion-over-time chart, event + social feeds"),
-    task("designer","Agent detail panel + chat UI"),
-    task("researcher","Tune sim params","Peer-pull weight, deep-sample size"),
-    task("researcher","Golden scenarios + face-validity checks"),
-    task("shared","★ GATE: Integration checkpoint","One full run end-to-end")
+  const llm = mk("week","LLM Plumbing — connect the model",{ weekLabel:"LLM", assignee:null, collapsed:true,
+    desc:"~4.5 working days" });
+  llm.children = [
+    task("[0.5d] Pick the model","Cheap and good. Look: DeepSeek / Qwen / Groq / OpenAI pricing."),
+    task("[1d] Citizen prompt","One prompt that makes a person react; test on 1."),
+    task("[1d] Cheap & safe","Batch per call, force JSON, retry, and no-key fallback."),
+    task("[2d] Server + live view","Stream updates day by day with SSE.")
   ];
 
-  const w3 = mk("week","Validate, Polish, Demo",{ weekLabel:"WEEK 3", assignee:"shared", collapsed:true,
-    desc:"Calibrate, harden and rehearse." });
-  w3.children = [
-    task("researcher","Validation sweeps + calibration"),
-    task("researcher","Methodology + limitations write-up"),
-    task("designer","Responsive, a11y, motion","Empty / loading states"),
-    task("designer","Demo visual polish"),
-    task("engineer","Cost/latency tuning","Retries & error handling"),
-    task("engineer","Deploy + security","Static-file guard so secrets aren't served"),
-    task("shared","Full-stack smoke test"),
-    task("shared","Architecture document"),
-    task("shared","★ GATE: Rehearse demo + submit")
+  const research = mk("week","Research — idea & impact on society",{ weekLabel:"RESEARCH", assignee:null, collapsed:true,
+    desc:"~3 working days" });
+  research.children = [
+    task("[0.5d] One-line pitch","\"Test any idea on a city before it's real.\""),
+    task("[1d] Why it matters","2-3 real cases. Look: policy rollout, public-health messaging, misinformation."),
+    task("[1d] Believability check","Pick a real past event and see if the sim points the same way."),
+    task("[0.5d] Ethics & limits","One paragraph: model not prophecy, misuse risks.")
   ];
 
-  root.children = [w1, w2, w3];
+  const judges = mk("week","Judges — how to present",{ weekLabel:"JUDGES", assignee:null, collapsed:true,
+    desc:"~3.5 working days" });
+  judges.children = [
+    task("[0.5d] Know the criteria","List what NurAI scores. Look: rules page, past winning pitches."),
+    task("[1d] The story","5 slides: problem -> why now -> demo -> impact -> ask."),
+    task("[1d] The safe demo","Pre-baked Baghdad curfew run, no live API."),
+    task("[1d] Rehearse","Prep answers for \"is it accurate?\" and \"how is this different from a poll?\"")
+  ];
+
+  const design = mk("week","Design",{ weekLabel:"DESIGN", assignee:null, collapsed:true,
+    desc:"~2 working days" });
+  design.children = [
+    task("[2d] Vibe-code the UI","3 screens with Claude/v0, wire to server, keep simple.")
+  ];
+
+  const ship = mk("week","Ship",{ weekLabel:"SHIP", assignee:null, collapsed:true,
+    desc:"~1 working day" });
+  ship.children = [
+    task("[1d] Online + final test + submit","One full run, then submit.")
+  ];
+
+  root.children = [ai, llm, research, judges, design, ship];
   return [root];
 }
 
 /* ---------------- state ---------------- */
 let state = null;
-function freshState(){ return { people: seedPeople(), forest: seedForest(), selectedId:null, layout:"flow", flowPath:[] }; }
+function freshState(){ return { people: seedPeople(), forest: seedForest(), notes:[], selectedId:null, layout:"flow", flowPath:[], view:"planner" }; }
 
 function load(){
   try{
     const raw = localStorage.getItem(LS_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
-      if(parsed && parsed.forest && parsed.people) return parsed;
+      if(parsed && parsed.forest && parsed.people){
+        if(!Array.isArray(parsed.notes)) parsed.notes = [];
+        if(parsed.view!=="notes" && parsed.view!=="planner") parsed.view = "planner";
+        return parsed;
+      }
     }
   }catch(e){ console.warn("load failed", e); }
   return freshState();
@@ -721,7 +920,7 @@ function flowContext(){
 function ensureFlowPositions(list, parent){
   const perRow = list.length<=4 ? list.length : (list.length<=8 ? Math.ceil(list.length/2) : 5);
   list.forEach((n,i)=>{
-    if(!n.pos){
+    if(!n.pos || !Number.isFinite(n.pos.x) || !Number.isFinite(n.pos.y)){
       const col = i % perRow, row = Math.floor(i/perRow);
       n.pos = { x: 80 + col*300, y: 150 + row*210 };
     }
@@ -947,8 +1146,8 @@ function renderTeam(){
       <div class="person">
         <div class="pav" ${av}>${inner}</div>
         <div class="pinfo">
-          <div class="pname">${escapeHTML(p.name)}</div>
-          <div class="prole">${escapeHTML(p.role)}</div>
+          <input class="person-edit name" data-person-name="${id}" value="${escapeHTML(p.name)}" aria-label="Person name" />
+          <input class="person-edit role" data-person-role="${id}" value="${escapeHTML(p.role)}" aria-label="Person role" />
           <div class="pswatch"><i style="background:${p.color}"></i>${p.color}</div>
         </div>
         <div class="pactions">
@@ -1014,6 +1213,220 @@ function renderEditor(){
   $("#ed-add-sibling").style.display = "";
 }
 
+/* ---------------- notes tab ---------------- */
+const STATUS_COLORS = { todo:"#64748b", inprogress:"#38bdf8", done:"#22c55e" };
+let noteDrafts = {};
+let pickerTarget = null;
+
+function ensureNotesState(){
+  if(!Array.isArray(state.notes)) state.notes = [];
+  state.people.order.forEach(targetId=>{
+    if(!noteDrafts[targetId]){
+      const fallbackAuthor = state.people.order.find(id=>id!==targetId) || targetId;
+      noteDrafts[targetId] = { text:"", refs:new Set(), author:fallbackAuthor };
+    }
+    if(!personOf(noteDrafts[targetId].author)) noteDrafts[targetId].author = state.people.order[0] || targetId;
+  });
+}
+
+function fmtNoteTime(ts){
+  const d = new Date(ts), now = new Date();
+  const diff = (now-ts)/1000;
+  if(diff < 60) return "just now";
+  if(diff < 3600) return Math.floor(diff/60)+"m ago";
+  if(diff < 86400 && d.getDate()===now.getDate()) return d.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+  if(diff < 172800) return "yesterday " + d.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+  return d.toLocaleDateString([], {month:"short", day:"numeric"}) + " · " + d.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+}
+
+function taskGroupLabel(node){
+  const parent = findParent(node.id);
+  if(!parent) return "PROJECT";
+  return parent.weekLabel || parent.title || "TASK";
+}
+
+function refTaskItems(){
+  const items = [];
+  eachNode(node=>{
+    if(node.kind!=="task") return;
+    items.push({
+      id:node.id,
+      title:node.title,
+      group:taskGroupLabel(node),
+      status:node.status,
+      assignee:node.assignee,
+      gate:isGate(node)
+    });
+  });
+  return items;
+}
+
+function noteChipHTML(taskId, removable){
+  const node = findNode(taskId);
+  if(!node) return "";
+  const group = taskGroupLabel(node);
+  const col = STATUS_COLORS[node.status] || "#64748b";
+  const title = isGate(node) ? node.title.replace(/^★\s*/,"") : node.title;
+  return `<span class="chip ${isGate(node)?'gate':''}" title="${escapeHTML(group)} · ${escapeHTML(roleTagText(node))}">
+      <span class="cdot" style="--cdot:${col}"></span>
+      <span class="cweek">${escapeHTML(group)}</span>
+      <span class="ctxt">${isGate(node)?'★ ':''}${escapeHTML(title)}</span>
+      ${removable?`<span class="cx" data-rmref="${taskId}">✕</span>`:''}
+    </span>`;
+}
+
+function personAvatarInner(p){ return p.photo ? "" : initials(p.name); }
+function personAvatarBackground(p){ return p.photo ? `background-image:url('${p.photo}');` : `background:${p.color};`; }
+
+function renderNotes(){
+  if(!state) return;
+  ensureNotesState();
+  const board = $("#notes-board");
+  if(!board) return;
+  const people = state.people.order.map(id=>personOf(id)).filter(Boolean);
+  board.innerHTML = people.map(target=>{
+    const mine = state.notes.filter(n=>n.to===target.id).sort((a,b)=>b.ts-a.ts);
+    const d = noteDrafts[target.id];
+    const refsHTML = [...d.refs].map(id=>noteChipHTML(id, true)).join("");
+    const canPost = d.text.trim().length>0;
+    const authorOptions = people.map(p=>`<option value="${p.id}" ${d.author===p.id?'selected':''}>${escapeHTML(p.name)}</option>`).join("");
+    const notesHTML = mine.length ? mine.map(noteHTML).join("") :
+      `<div class="notes-empty"><span class="ico">✎</span>No notes yet.<br>Write the first one for ${escapeHTML(target.name)}.</div>`;
+    return `
+    <section class="notes-col" style="--accent:${target.color}" data-notes-col="${target.id}">
+      <div class="notes-col-head">
+        <div class="notes-avatar" style="${personAvatarBackground(target)}">${personAvatarInner(target)}</div>
+        <div class="notes-col-id">
+          <div class="notes-col-name">${escapeHTML(target.name)}</div>
+          <div class="notes-col-role">${escapeHTML(target.role)}</div>
+        </div>
+        <div class="notes-col-count">${mine.length} note${mine.length===1?'':'s'}</div>
+      </div>
+      <div class="notes-composer">
+        <label class="notes-from">From <select data-note-author="${target.id}">${authorOptions}</select></label>
+        <textarea data-note-comp="${target.id}" rows="1" placeholder="Write a note for ${escapeHTML(target.name)}…">${escapeHTML(d.text)}</textarea>
+        <div class="notes-comp-refs">${refsHTML}</div>
+        <div class="notes-comp-foot">
+          <button class="notes-ref-btn" data-note-ref="${target.id}"><span class="hash">＃</span> Reference task</button>
+          <button class="notes-post-btn ${canPost?'on':''}" data-note-post="${target.id}">Post note</button>
+        </div>
+      </div>
+      <div class="notes-list">${notesHTML}</div>
+    </section>`;
+  }).join("");
+  board.querySelectorAll("textarea[data-note-comp]").forEach(autosizeNote);
+}
+
+function noteHTML(n){
+  const author = personOf(n.author) || { name:"Unknown", role:"", color:"#94a3b8", photo:null };
+  const refs = (n.refs||[]).map(id=>noteChipHTML(id,false)).join("");
+  return `
+    <article class="note" data-note="${n.id}">
+      <div class="note-head">
+        <div class="note-av" style="--author:${author.color};${personAvatarBackground(author)}">${personAvatarInner(author)}</div>
+        <span class="note-author">${escapeHTML(author.name)}</span>
+        <span class="note-time">${fmtNoteTime(n.ts)}</span>
+        <button class="note-del" data-note-del="${n.id}" title="Delete note">✕</button>
+      </div>
+      <div class="note-body">${escapeHTML(n.text)}</div>
+      ${refs?`<div class="note-refs">${refs}</div>`:''}
+    </article>`;
+}
+
+function autosizeNote(ta){ ta.style.height="auto"; ta.style.height = Math.min(ta.scrollHeight, 180)+"px"; }
+
+function postNote(targetId){
+  ensureNotesState();
+  const d = noteDrafts[targetId];
+  const text = d.text.trim();
+  if(!text) return;
+  state.notes.push({ id:uid(), to:targetId, author:d.author, text, refs:[...d.refs], ts:Date.now() });
+  d.text = "";
+  d.refs = new Set();
+  save();
+  renderNotes();
+  focusNoteComposer(targetId);
+}
+
+function focusNoteComposer(targetId){
+  const ta = $("#notes-board").querySelector(`textarea[data-note-comp="${targetId}"]`);
+  if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+}
+
+function openNotePicker(targetId, anchor){
+  pickerTarget = targetId;
+  const p = personOf(targetId);
+  const pop = $("#notes-popover");
+  pop.style.setProperty("--accent", p ? p.color : "#4cc2ff");
+  $("#notes-pop-search").value = "";
+  renderNotePicker("");
+  $("#notes-scrim").classList.add("show");
+  pop.classList.add("show");
+  const r = anchor.getBoundingClientRect();
+  const pw = 340, ph = pop.offsetHeight || 420;
+  let left = r.left, top = r.bottom + 8;
+  if(left + pw > window.innerWidth - 12) left = window.innerWidth - pw - 12;
+  if(top + ph > window.innerHeight - 12) top = Math.max(64, r.top - ph - 8);
+  pop.style.left = left+"px";
+  pop.style.top = top+"px";
+  setTimeout(()=>$("#notes-pop-search").focus(), 30);
+}
+
+function closeNotePicker(){
+  $("#notes-popover").classList.remove("show");
+  $("#notes-scrim").classList.remove("show");
+  pickerTarget = null;
+}
+
+function renderNotePicker(q){
+  ensureNotesState();
+  const sel = noteDrafts[pickerTarget].refs;
+  const ql = q.trim().toLowerCase();
+  const items = refTaskItems().filter(t=>{
+    const p = personOf(t.assignee);
+    return !ql || t.title.toLowerCase().includes(ql) || t.group.toLowerCase().includes(ql) || (p && p.name.toLowerCase().includes(ql));
+  });
+  const groups = [];
+  items.forEach(t=>{ if(!groups.includes(t.group)) groups.push(t.group); });
+  let html = "";
+  groups.forEach(group=>{
+    const groupItems = items.filter(t=>t.group===group);
+    html += `<div class="notes-pop-week">${escapeHTML(group)}</div>`;
+    html += groupItems.map(t=>{
+      const col = STATUS_COLORS[t.status] || "#64748b";
+      const per = personOf(t.assignee) || { name:"Unassigned", color:"#5d6b78" };
+      const label = t.gate ? t.title.replace(/^★\s*/,'★ ') : t.title;
+      return `<button class="notes-pop-item ${sel.has(t.id)?'sel':''}" data-note-pick="${t.id}">
+          <span class="pdot" style="background:${col}"></span>
+          <span class="ptxt">${escapeHTML(label)}</span>
+          <span class="prole" style="background:${per.color}" title="${escapeHTML(per.name)}">${t.assignee==='shared'?'★':(t.assignee?initials(per.name):'?')}</span>
+          <span class="pcheck">✓</span>
+        </button>`;
+    }).join("");
+  });
+  if(!html) html = `<div class="notes-pop-week" style="text-align:center;padding:24px 8px;">No matching tasks</div>`;
+  $("#notes-pop-list").innerHTML = html;
+  $("#notes-pop-cnt").textContent = `${sel.size} selected`;
+}
+
+function updateAppView(){
+  const notes = state && state.view==="notes";
+  document.querySelectorAll("#view-toggle [data-view]").forEach(b=>b.classList.toggle("active", b.dataset.view===(notes?"notes":"planner")));
+  document.querySelectorAll(".planner-only").forEach(el=>{ el.style.display = notes ? "none" : ""; });
+  document.querySelectorAll(".notes-only").forEach(el=>{ el.style.display = notes ? "inline-flex" : "none"; });
+  $("#stage").style.display = notes ? "none" : "";
+  $("#notes-board").style.display = notes ? "grid" : "none";
+  $("#legend").style.display = notes ? "none" : "";
+  $("#zoomctl").style.display = notes ? "none" : "";
+  if(notes){
+    state.selectedId = null;
+    $("#editor").classList.remove("open");
+    closeTeam();
+    renderNotes();
+    $("#hint").textContent = "notes are saved on this device · choose who sent it · use ＃ to reference a task";
+  }
+}
+
 /* ---------------- full render ---------------- */
 function renderAll(){
   const cols = state.layout==="columns";
@@ -1042,6 +1455,7 @@ function renderAll(){
   renderLegend();
   renderEditor();
   $("#empty").classList.toggle("show", state.forest.length===0);
+  updateAppView();
   save();
 }
 
@@ -1301,6 +1715,13 @@ function countSubtree(n){ let c=1; n.children.forEach(ch=>c+=countSubtree(ch)); 
 
 /* keyboard */
 window.addEventListener("keydown", e=>{
+  if(e.key==="Escape" && $("#notes-popover").classList.contains("show")){
+    const c = pickerTarget;
+    closeNotePicker();
+    renderNotes();
+    if(c) focusNoteComposer(c);
+    return;
+  }
   if(e.target.matches("input,textarea,[contenteditable='true']")) return;
   if(e.key==="Escape"){ deselect(); $("#team").classList.remove("open"); $("#scrim").classList.remove("show"); }
   if((e.key==="Delete"||e.key==="Backspace") && state.selectedId){
@@ -1311,6 +1732,12 @@ window.addEventListener("keydown", e=>{
 });
 
 /* ---------------- toolbar ---------------- */
+$("#view-toggle").addEventListener("click", e=>{
+  const b = e.target.closest("[data-view]");
+  if(!b || !state) return;
+  state.view = b.dataset.view;
+  renderAll();
+});
 $("#btn-add-root").addEventListener("click", addRoot);
 $("#empty-add").addEventListener("click", addRoot);
 $("#btn-expand").addEventListener("click", ()=>expandAll(false));
@@ -1320,14 +1747,14 @@ $("#btn-collapse").addEventListener("click", ()=>{
   renderAll();
 });
 $("#btn-reset").addEventListener("click", ()=>{
-  if(confirm("Reset everything to the seed template? This clears your edits AND uploaded photos.")){
+  if(confirm("Reset everything to the seed template? This clears your task edits, notes, and uploaded photos.")){
     state = freshState(); panX=80; panY=20; zoom=0.85; applyTransform(); renderAll(); fitView();
   }
 });
 
 /* export / import JSON */
 $("#btn-export").addEventListener("click", ()=>{
-  const data = { people: state.people, forest: state.forest };
+  const data = { people: state.people, forest: state.forest, notes: state.notes || [] };
   const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
@@ -1345,6 +1772,7 @@ $("#file-import").addEventListener("change", e=>{
       if(!data.forest||!data.people) throw new Error("Missing forest/people");
       state.people = data.people;
       state.forest = data.forest;
+      state.notes = Array.isArray(data.notes) ? data.notes : [];
       state.selectedId = null;
       renderAll(); fitView();
     }catch(err){ alert("Could not import: "+err.message); }
@@ -1366,6 +1794,18 @@ $("#tm-body").addEventListener("click", e=>{
   const cl=e.target.closest("[data-clear]");
   if(up){ uploadTarget=up.dataset.upload; $("#file-photo").click(); }
   if(cl){ const p=personOf(cl.dataset.clear); p.photo=null; renderTeam(); renderAll(); }
+});
+$("#tm-body").addEventListener("input", e=>{
+  const name = e.target.closest("[data-person-name]");
+  const role = e.target.closest("[data-person-role]");
+  if(name){
+    const p = personOf(name.dataset.personName);
+    if(p){ p.name = name.value.trim() || "Unnamed"; renderLegend(); renderEditor(); renderNotes(); save(); }
+  }
+  if(role){
+    const p = personOf(role.dataset.personRole);
+    if(p){ p.role = role.value.trim() || "Teammate"; renderLegend(); renderEditor(); renderNotes(); save(); }
+  }
 });
 $("#file-photo").addEventListener("change", e=>{
   const f=e.target.files[0]; if(!f||!uploadTarget) return;
@@ -1392,6 +1832,67 @@ function downscaleImage(dataUrl, max, cb){
   img.onerror=()=>cb(dataUrl);
   img.src=dataUrl;
 }
+
+/* ---------------- notes interactions ---------------- */
+$("#notes-board").addEventListener("input", e=>{
+  const ta = e.target.closest("textarea[data-note-comp]");
+  if(!ta) return;
+  ensureNotesState();
+  const id = ta.dataset.noteComp;
+  noteDrafts[id].text = ta.value;
+  autosizeNote(ta);
+  const post = $("#notes-board").querySelector(`.notes-post-btn[data-note-post="${id}"]`);
+  if(post) post.classList.toggle("on", ta.value.trim().length>0);
+});
+$("#notes-board").addEventListener("change", e=>{
+  const sel = e.target.closest("select[data-note-author]");
+  if(!sel) return;
+  ensureNotesState();
+  noteDrafts[sel.dataset.noteAuthor].author = sel.value;
+  save();
+});
+$("#notes-board").addEventListener("keydown", e=>{
+  const ta = e.target.closest("textarea[data-note-comp]");
+  if(ta && (e.metaKey||e.ctrlKey) && e.key==="Enter"){ e.preventDefault(); postNote(ta.dataset.noteComp); }
+});
+$("#notes-board").addEventListener("click", e=>{
+  const post = e.target.closest("[data-note-post]");
+  if(post){ postNote(post.dataset.notePost); return; }
+  const ref = e.target.closest("[data-note-ref]");
+  if(ref){ openNotePicker(ref.dataset.noteRef, ref); return; }
+  const rm = e.target.closest("[data-rmref]");
+  if(rm){
+    const col = rm.closest("[data-notes-col]").dataset.notesCol;
+    noteDrafts[col].refs.delete(rm.dataset.rmref);
+    renderNotes(); focusNoteComposer(col); return;
+  }
+  const del = e.target.closest("[data-note-del]");
+  if(del){
+    state.notes = state.notes.filter(n=>n.id!==del.dataset.noteDel);
+    save(); renderNotes(); return;
+  }
+});
+$("#notes-pop-search").addEventListener("input", ()=>renderNotePicker($("#notes-pop-search").value));
+$("#notes-pop-list").addEventListener("click", e=>{
+  const it = e.target.closest("[data-note-pick]");
+  if(!it || !pickerTarget) return;
+  const sel = noteDrafts[pickerTarget].refs;
+  const id = it.dataset.notePick;
+  if(sel.has(id)) sel.delete(id); else sel.add(id);
+  renderNotePicker($("#notes-pop-search").value);
+});
+$("#notes-pop-done").addEventListener("click", ()=>{
+  const c = pickerTarget;
+  closeNotePicker();
+  renderNotes();
+  if(c) focusNoteComposer(c);
+});
+$("#notes-scrim").addEventListener("click", ()=>{
+  const c = pickerTarget;
+  closeNotePicker();
+  renderNotes();
+  if(c) focusNoteComposer(c);
+});
 
 /* ---------------- layout toggle ---------------- */
 function updateLayoutToggle(){
