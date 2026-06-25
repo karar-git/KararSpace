@@ -7,20 +7,30 @@ import { BaseCrudService } from '@/integrations';
 import { Articles, Projects } from '@/entities';
 import { format } from 'date-fns';
 
+interface SiteSettings {
+  cvUrl?: string;
+}
+
 export default function HomePage() {
   const [latestArticles, setLatestArticles] = useState<Articles[]>([]);
   const [latestProjects, setLatestProjects] = useState<Projects[]>([]);
+  const [settings, setSettings] = useState<SiteSettings>({});
   const [isLoading, setIsLoading] = useState(true);
+  const cvHref = settings.cvUrl?.trim() || '/cv';
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [articlesResult, projectsResult] = await Promise.all([
+        const [articlesResult, projectsResult, settingsResult] = await Promise.all([
           BaseCrudService.getAll<Articles>('articles', {}, { limit: 3 }),
           BaseCrudService.getAll<Projects>('projects', {}, { limit: 4 }),
+          fetch('https://kararspace-production.up.railway.app/api/settings')
+            .then((res) => (res.ok ? res.json() : null))
+            .catch(() => null),
         ]);
         setLatestArticles(articlesResult.items);
         setLatestProjects(projectsResult.items);
+        if (settingsResult) setSettings(settingsResult);
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -46,6 +56,17 @@ export default function HomePage() {
                 I'm Karar Haitham — exploring mathematics, artificial intelligence, 
                 and the pursuit of excellence through deep work and meaningful creation.
               </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a
+                  href={cvHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-5 py-3 bg-foreground text-background rounded-lg text-sm font-medium hover:bg-foreground/90 transition-colors"
+                >
+                  View CV
+                  <ArrowUpRight size={16} />
+                </a>
+              </div>
             </div>
           </div>
         </section>

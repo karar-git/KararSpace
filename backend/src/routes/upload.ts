@@ -6,7 +6,7 @@ import { authMiddleware } from '../middleware/auth.js';
 const router = Router();
 
 // Configure multer for memory storage
-const upload = multer({
+const imageUpload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
@@ -20,6 +20,20 @@ const upload = multer({
   },
 });
 
+const cvUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'));
+    }
+  },
+});
+
 // Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -28,7 +42,7 @@ cloudinary.config({
 });
 
 // Upload image endpoint
-router.post('/upload', authMiddleware, upload.single('image'), async (req, res) => {
+router.post('/upload', authMiddleware, imageUpload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
@@ -65,6 +79,43 @@ router.post('/upload', authMiddleware, upload.single('image'), async (req, res) 
   } catch (error: any) {
     console.error('Upload error:', error);
     res.status(500).json({ error: error.message || 'Upload failed' });
+  }
+});
+
+// Upload CV PDF endpoint
+router.post('/upload/cv', authMiddleware, cvUpload.single('cv'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No CV PDF provided' });
+    }
+
+    if (!process.env.CLOUDINARY_CLOUD_NAME) {
+      return res.status(500).json({ error: 'Cloudinary not configured' });
+    }
+
+    const result = await new Promise<any>((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'karar-portfolio/cv',
+          resource_type: 'raw',
+          public_id: `karar-haitham-cv-${Date.now()}`,
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      uploadStream.end(req.file!.buffer);
+    });
+
+    res.json({
+      success: true,
+      url: result.secure_url,
+      publicId: result.public_id,
+    });
+  } catch (error: any) {
+    console.error('CV upload error:', error);
+    res.status(500).json({ error: error.message || 'CV upload failed' });
   }
 });
 

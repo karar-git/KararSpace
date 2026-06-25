@@ -141,6 +141,7 @@ model SiteSettings {
   email       String?
   location    String?
   avatarUrl   String?
+  cvUrl       String?
   socialLinks Json?    @default("[]")
   interests   Json?    @default("[]")
   createdAt   DateTime @default(now())

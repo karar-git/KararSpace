@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
-import { Save } from 'lucide-react';
+import { ExternalLink, Save, Upload } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Settings {
   name?: string;
@@ -9,19 +10,29 @@ interface Settings {
   email?: string;
   location?: string;
   avatarUrl?: string;
+  cvUrl?: string;
   socialLinks?: { name: string; url: string }[];
   interests?: { symbol: string; label: string }[];
 }
 
 export function SettingsPage() {
+  const { admin } = useAuth();
   const [settings, setSettings] = useState<Settings>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingCv, setUploadingCv] = useState(false);
   const [message, setMessage] = useState('');
+  const [credentialEmail, setCredentialEmail] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
   useEffect(() => {
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    if (admin?.email) setCredentialEmail(admin.email);
+  }, [admin?.email]);
 
   async function loadSettings() {
     try {
@@ -47,6 +58,57 @@ export function SettingsPage() {
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       setMessage('Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleCvUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      setMessage('Please upload a PDF file');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setMessage('CV PDF must be less than 10MB');
+      return;
+    }
+
+    setUploadingCv(true);
+    setMessage('');
+    try {
+      const result = await api.uploadCv(file);
+      const nextSettings = { ...settings, cvUrl: result.url };
+      setSettings(nextSettings);
+      await api.updateSettings(nextSettings);
+      setMessage('CV uploaded and saved successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error: any) {
+      setMessage(error.message || 'Failed to upload CV');
+    } finally {
+      setUploadingCv(false);
+    }
+  }
+
+  async function handleCredentialsSave() {
+    setSaving(true);
+    setMessage('');
+    try {
+      await api.updateCredentials({
+        email: credentialEmail,
+        currentPassword,
+        newPassword: newPassword || undefined,
+      });
+      setCurrentPassword('');
+      setNewPassword('');
+      setMessage('Admin credentials updated successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error: any) {
+      setMessage(error.message || 'Failed to update credentials');
     } finally {
       setSaving(false);
     }
@@ -151,6 +213,49 @@ export function SettingsPage() {
           </div>
         </div>
 
+        {/* CV */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+          <h2 className="text-lg font-semibold text-white mb-6">CV</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-zinc-400 mb-2">CV URL</label>
+              <input
+                type="url"
+                value={settings.cvUrl || ''}
+                onChange={(e) => setSettings({ ...settings, cvUrl: e.target.value })}
+                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-zinc-500"
+                placeholder="https://... or leave empty to use /cv.pdf"
+              />
+              <p className="text-xs text-zinc-500 mt-2">
+                Public stable link: https://kararspace.com/cv
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <label className="flex items-center justify-center gap-2 px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-300 hover:bg-zinc-700 transition cursor-pointer">
+                <Upload size={18} />
+                {uploadingCv ? 'Uploading...' : 'Upload PDF'}
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleCvUpload}
+                  disabled={uploadingCv}
+                  className="hidden"
+                />
+              </label>
+              <a
+                href="https://kararspace.com/cv"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 px-4 py-3 border border-zinc-700 text-zinc-300 rounded-lg hover:bg-zinc-800 transition"
+              >
+                <ExternalLink size={18} />
+                Open public CV
+              </a>
+            </div>
+          </div>
+        </div>
+
         {/* Social Links */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
           <div className="flex items-center justify-between mb-6">
@@ -190,6 +295,50 @@ export function SettingsPage() {
             {(settings.socialLinks || []).length === 0 && (
               <p className="text-zinc-500 text-sm">No social links added yet.</p>
             )}
+          </div>
+        </div>
+
+        {/* Admin Credentials */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+          <h2 className="text-lg font-semibold text-white mb-6">Admin Credentials</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-zinc-400 mb-2">Admin Email</label>
+              <input
+                type="email"
+                value={credentialEmail}
+                onChange={(e) => setCredentialEmail(e.target.value)}
+                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-zinc-500"
+                placeholder="admin@example.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-zinc-400 mb-2">Current Password</label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-zinc-500"
+                placeholder="Required to update credentials"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-zinc-400 mb-2">New Password</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:border-zinc-500"
+                placeholder="Leave blank to keep current password"
+              />
+            </div>
+            <button
+              onClick={handleCredentialsSave}
+              disabled={saving || !currentPassword}
+              className="px-4 py-3 bg-white text-black rounded-lg hover:bg-zinc-200 transition disabled:opacity-50"
+            >
+              Update Admin Credentials
+            </button>
           </div>
         </div>
       </div>

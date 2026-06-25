@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import prisma from '../lib/prisma.js';
-import { generateToken } from '../middleware/auth.js';
+import { authMiddleware, AuthRequest, generateToken } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -46,6 +46,58 @@ router.post('/login', async (req, res) => {
 router.post('/logout', (req, res) => {
   res.clearCookie('token');
   res.json({ success: true });
+});
+
+// Update current admin credentials
+router.put('/credentials', authMiddleware, async (req: AuthRequest, res) => {
+  try {
+    const { email, currentPassword, newPassword, name } = req.body;
+
+    if (!currentPassword) {
+      return res.status(400).json({ error: 'Current password is required' });
+    }
+
+    if (email && !email.includes('@')) {
+      return res.status(400).json({ error: 'Valid email is required' });
+    }
+
+    if (newPassword && newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    if (!req.adminId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const admin = await prisma.admin.findUnique({ where: { id: req.adminId } });
+    if (!admin) {
+      return res.status(404).json({ error: 'Admin not found' });
+    }
+
+    const validPassword = await bcrypt.compare(currentPassword, admin.password);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    const data: Record<string, string> = {};
+    if (email) data.email = email;
+    if (typeof name === 'string') data.name = name;
+    if (newPassword) data.password = await bcrypt.hash(newPassword, 12);
+
+    const updated = await prisma.admin.update({
+      where: { id: admin.id },
+      data,
+      select: { id: true, email: true, name: true },
+    });
+
+    res.json({ success: true, admin: updated });
+  } catch (error: any) {
+    if (error?.code === 'P2002') {
+      return res.status(409).json({ error: 'Email is already in use' });
+    }
+    console.error('Credentials update error:', error);
+    res.status(500).json({ error: 'Failed to update credentials' });
+  }
 });
 
 // Register - DISABLED for security

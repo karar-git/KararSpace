@@ -45,6 +45,14 @@ export default function Header() {
                 {label}
               </Link>
             ))}
+            <a
+              href="/cv"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted hover:text-foreground transition-colors"
+            >
+              CV
+            </a>
           </nav>
 
           {/* Mobile Menu Button */}
@@ -74,6 +82,15 @@ export default function Header() {
                 {label}
               </Link>
             ))}
+            <a
+              href="/cv"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="py-2.5 px-3 -mx-3 rounded-lg text-sm text-muted hover:text-foreground hover:bg-border/30 transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              CV
+            </a>
           </nav>
         )}
       </div>

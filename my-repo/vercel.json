@@ -4,6 +4,12 @@
       "PUBLIC_API_URL": "https://kararspace-production.up.railway.app/api"
     }
   },
+  "rewrites": [
+    {
+      "source": "/cv",
+      "destination": "https://kararspace-production.up.railway.app/api/cv"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

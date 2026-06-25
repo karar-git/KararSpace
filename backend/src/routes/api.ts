@@ -588,6 +588,16 @@ router.get('/settings', async (req, res) => {
   }
 });
 
+router.get('/cv', async (_req, res) => {
+  try {
+    const settings = await prisma.siteSettings.findUnique({ where: { id: 'main' } });
+    const cvUrl = settings?.cvUrl?.trim() || 'https://kararspace.com/cv.pdf';
+    res.redirect(302, cvUrl);
+  } catch (error) {
+    res.redirect(302, 'https://kararspace.com/cv.pdf');
+  }
+});
+
 router.put('/admin/settings', authMiddleware, async (req: AuthRequest, res) => {
   try {
     const settings = await prisma.siteSettings.upsert({

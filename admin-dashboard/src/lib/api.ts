@@ -51,10 +51,32 @@ async function uploadImage(file: File): Promise<{ url: string; publicId: string 
   return res.json();
 }
 
+async function uploadCv(file: File): Promise<{ url: string; publicId: string }> {
+  const token = getToken();
+  const formData = new FormData();
+  formData.append('cv', file);
+
+  const res = await fetch(`${API_BASE}/upload/cv`, {
+    method: 'POST',
+    headers: {
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: 'CV upload failed' }));
+    throw new Error(error.error || 'CV upload failed');
+  }
+
+  return res.json();
+}
+
 // Generic CRUD operations
 export const api = {
   // Image upload
   uploadImage,
+  uploadCv,
   
   // Projects
   getProjects: () => request<any[]>('/admin/projects'),
@@ -94,4 +116,5 @@ export const api = {
   // Settings
   getSettings: () => request<any>('/settings'),
   updateSettings: (data: any) => request<any>('/admin/settings', { method: 'PUT', body: JSON.stringify(data) }),
+  updateCredentials: (data: any) => request<any>('/auth/credentials', { method: 'PUT', body: JSON.stringify(data) }),
 };
