@@ -13,15 +13,12 @@ import {
   deleteNote,
   getSettings,
   getToken,
-  getWho,
   listNotes,
   saveSettings,
   setToken,
-  setWho,
   unlock,
   updateNote,
   uploadPhoto,
-  type Author,
   type Note,
   type Settings,
 } from './api';
@@ -30,6 +27,7 @@ type Screen = 'list' | 'spin' | 'done';
 
 const POLL_MS = 7000;
 const MAX_SEGMENTS = 6;
+const DEFAULT_NAMES = { nameOne: 'karar', nameTwo: 'dania' };
 
 /* ------------------------------------------------------------------ */
 
@@ -148,13 +146,9 @@ function DayCounter({
 /* ------------------------------------------------------------------ */
 
 function AddRow({
-  who,
-  onWho,
   onAdd,
   onError,
 }: {
-  who: Author;
-  onWho: (who: Author) => void;
   onAdd: (body: string, photoUrl: string | null) => Promise<void>;
   onError: (message: string) => void;
 }) {
@@ -204,23 +198,6 @@ function AddRow({
         }}
       />
       <div className="us-add-row">
-        <button
-          type="button"
-          className={`us-chip${who === 'karar' ? ' on' : ''}`}
-          onClick={() => onWho('karar')}
-        >
-          <Heart size={12} fill={who === 'karar' ? 'var(--karar)' : 'var(--muted)'} />
-          karar
-        </button>
-        <button
-          type="button"
-          className={`us-chip dania${who === 'dania' ? ' on' : ''}`}
-          onClick={() => onWho('dania')}
-        >
-          <Heart size={12} fill={who === 'dania' ? 'var(--dania)' : 'var(--muted)'} />
-          dania
-        </button>
-
         {photo ? (
           <button type="button" className="us-chip on" onClick={() => setPhoto(null)}>
             <img className="us-thumb" src={photo.preview} alt="" />
@@ -265,6 +242,8 @@ function SettingsModal({
   onClose: () => void;
   onSave: (next: Settings) => Promise<void>;
 }) {
+  const [nameOne, setNameOne] = useState(settings?.nameOne ?? '');
+  const [nameTwo, setNameTwo] = useState(settings?.nameTwo ?? '');
   const [anniversary, setAnniversary] = useState(toDateInput(settings?.anniversary ?? null));
   const [nextDate, setNextDate] = useState(settings?.nextDate ?? '');
   const [busy, setBusy] = useState(false);
@@ -272,7 +251,29 @@ function SettingsModal({
   return (
     <div className="us-modal" onClick={onClose}>
       <div className="us-modal-card" onClick={(event) => event.stopPropagation()}>
-        <h3>our day</h3>
+        <h3>us</h3>
+        <div className="us-field-pair">
+          <label className="us-field">
+            <span>name on the left</span>
+            <input
+              type="text"
+              maxLength={24}
+              placeholder="karar"
+              value={nameOne}
+              onChange={(event) => setNameOne(event.target.value)}
+            />
+          </label>
+          <label className="us-field">
+            <span>name on the right</span>
+            <input
+              type="text"
+              maxLength={24}
+              placeholder="dania"
+              value={nameTwo}
+              onChange={(event) => setNameTwo(event.target.value)}
+            />
+          </label>
+        </div>
         <label className="us-field">
           <span>the day it started</span>
           <input
@@ -298,6 +299,8 @@ function SettingsModal({
             onClick={async () => {
               setBusy(true);
               await onSave({
+                nameOne: nameOne.trim() || 'karar',
+                nameTwo: nameTwo.trim() || 'dania',
                 anniversary: anniversary ? new Date(anniversary).toISOString() : null,
                 nextDate: nextDate.trim() || null,
               });
@@ -324,7 +327,6 @@ export default function UsPage() {
   const [screen, setScreen] = useState<Screen>('list');
   const [activeIndex, setActiveIndex] = useState(0);
   const [result, setResult] = useState<Note | null>(null);
-  const [who, setWhoState] = useState<Author>('karar');
   const [showSettings, setShowSettings] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -349,10 +351,6 @@ export default function UsPage() {
       fonts.remove();
       document.title = previousTitle;
     };
-  }, []);
-
-  useEffect(() => {
-    setWhoState(getWho());
   }, []);
 
   const showToast = useCallback((message: string) => {
@@ -425,6 +423,10 @@ export default function UsPage() {
   }, [notes.length, activeIndex]);
 
   const activeNote = notes[activeIndex] ?? null;
+  const names = {
+    nameOne: settings?.nameOne || DEFAULT_NAMES.nameOne,
+    nameTwo: settings?.nameTwo || DEFAULT_NAMES.nameTwo,
+  };
 
   const toggleDone = async (note: Note) => {
     const next = !note.done;
@@ -449,7 +451,7 @@ export default function UsPage() {
   };
 
   const add = async (body: string, photoUrl: string | null) => {
-    const note = await addNote({ body, author: who, photoUrl });
+    const note = await addNote({ body, photoUrl });
     setNotes((current) => [note, ...current]);
     setActiveIndex(0);
   };
@@ -478,11 +480,6 @@ export default function UsPage() {
     }
   };
 
-  const chooseWho = (next: Author) => {
-    setWhoState(next);
-    setWho(next);
-  };
-
   if (unlocked === null) {
     return (
       <div className="us-root">
@@ -502,11 +499,16 @@ export default function UsPage() {
 
       <div className="us-shell">
         <header className="us-header">
-          <div className="us-wordmark">
-            karar
+          <button
+            type="button"
+            className="us-wordmark"
+            title="change our names"
+            onClick={() => setShowSettings(true)}
+          >
+            {names.nameOne}
             <Heart size={20} fill="var(--accent)" className="us-beat" />
-            dania
-          </div>
+            {names.nameTwo}
+          </button>
           <nav className="us-nav">
             <button
               type="button"
@@ -568,7 +570,7 @@ export default function UsPage() {
               </>
             )}
 
-            <AddRow who={who} onWho={chooseWho} onAdd={add} onError={showToast} />
+            <AddRow onAdd={add} onError={showToast} />
 
             <div className="us-panel-actions" style={{ justifyContent: 'center' }}>
               <button type="button" className="us-pill" onClick={() => setScreen('spin')}>
@@ -638,16 +640,12 @@ export default function UsPage() {
                       aria-label="undo"
                       onClick={() => toggleDone(note)}
                     >
-                      <Heart
-                        size={20}
-                        fill={note.author === 'karar' ? 'var(--karar)' : 'var(--dania)'}
-                      />
+                      <Heart size={20} fill="var(--accent)" />
                     </button>
                     <div>
                       <p>{note.body}</p>
                       <small>
-                        {note.author} · talked about
-                        {note.doneAt ? ` ${prettyDate(note.doneAt)}` : ''}
+                        talked about{note.doneAt ? ` ${prettyDate(note.doneAt)}` : ''}
                       </small>
                     </div>
                   </div>

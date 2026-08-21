@@ -18,8 +18,6 @@
   --muted: #b98da0;
   --muted-light: #c9a3b4;
   --dim: #b48ea0;
-  --karar: #d6396b;
-  --dania: #7b5ea7;
 
   --serif: "Instrument Serif", Georgia, serif;
   --ui: "Quicksand", "Trebuchet MS", sans-serif;
@@ -108,10 +106,16 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 0;
   font-family: var(--serif);
   font-size: 26px;
   letter-spacing: 0.01em;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
 }
+
+.us-wordmark:hover { color: var(--accent); }
 
 @media (min-width: 720px) {
   .us-wordmark { font-size: 32px; }
@@ -331,14 +335,13 @@
   gap: 8px;
 }
 
-.us-author {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+.us-card-when {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  color: var(--muted-light);
 }
-
-.us-author.karar { color: var(--karar); }
-.us-author.dania { color: var(--dania); }
 
 .us-heart-btn {
   display: grid;
@@ -548,7 +551,6 @@
 }
 
 .us-chip.on { color: var(--accent); box-shadow: inset 0 0 0 1px var(--card-border-active); }
-.us-chip.dania.on { color: var(--dania); box-shadow: inset 0 0 0 1px #cbb8e6; }
 
 .us-add-send {
   display: grid;
@@ -823,6 +825,18 @@
 .us-field {
   display: block;
   margin-top: 14px;
+}
+
+.us-field-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.us-field-pair .us-field { margin-top: 14px; }
+
+@media (max-width: 420px) {
+  .us-field-pair { grid-template-columns: 1fr; gap: 0; }
 }
 
 .us-field span {

@@ -18,7 +18,6 @@ export default function NotePanel({
   onEditLabel,
 }: NotePanelProps) {
   const label = eyebrow ?? (note.done ? 'already talked about' : 'up next');
-  const color = note.author === 'karar' ? 'var(--karar)' : 'var(--dania)';
 
   return (
     <div className="us-panel">
@@ -26,9 +25,7 @@ export default function NotePanel({
       <p className="us-panel-body" style={note.done ? { color: 'var(--dim)' } : undefined}>
         {note.body}
       </p>
-      <div className="us-panel-meta">
-        added by <strong style={{ color }}>{note.author}</strong> · {addedTag(note.createdAt)}
-      </div>
+      <div className="us-panel-meta">{addedTag(note.createdAt)}</div>
 
       {note.photoUrl && <img className="us-panel-photo" src={note.photoUrl} alt="" />}
 

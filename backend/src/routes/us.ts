@@ -18,9 +18,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const AUTHORS = ['karar', 'dania'] as const;
-type Author = (typeof AUTHORS)[number];
-
 // Nothing here should ever be indexed or cached by anything in between
 router.use((_req, res, next) => {
   res.set('X-Robots-Tag', 'noindex, nofollow');
@@ -84,10 +81,6 @@ router.get('/session', coupleAuth, (_req, res) => {
 
 // ---- notes --------------------------------------------------------------
 
-function parseAuthor(value: unknown): Author | null {
-  return AUTHORS.includes(value as Author) ? (value as Author) : null;
-}
-
 // A short two-line label for the wheel: the first couple of words that carry
 // any meaning. Editable per note afterwards.
 const FILLER = new Set(['i', 'we', 'you', 'the', 'a', 'an', 'my', 'our', 'that', 'it', 'to']);
@@ -119,7 +112,6 @@ router.get('/notes', coupleAuth, async (_req, res) => {
 router.post('/notes', coupleAuth, async (req, res) => {
   try {
     const body = typeof req.body?.body === 'string' ? req.body.body.trim() : '';
-    const author = parseAuthor(req.body?.author);
     const photoUrl = typeof req.body?.photoUrl === 'string' ? req.body.photoUrl : null;
     const spinLabel =
       typeof req.body?.spinLabel === 'string' && req.body.spinLabel.trim()
@@ -128,10 +120,9 @@ router.post('/notes', coupleAuth, async (req, res) => {
 
     if (!body) return res.status(400).json({ error: 'Write something first' });
     if (body.length > 2000) return res.status(400).json({ error: 'That is a long one — trim it a bit' });
-    if (!author) return res.status(400).json({ error: 'Who is adding this?' });
 
     const note = await prisma.note.create({
-      data: { body, author, photoUrl, spinLabel },
+      data: { body, photoUrl, spinLabel },
     });
     res.json(note);
   } catch (error) {
@@ -180,12 +171,28 @@ router.delete('/notes/:id', coupleAuth, async (req, res) => {
   }
 });
 
-// ---- settings (anniversary, next date) ----------------------------------
+// ---- settings (names, anniversary, next date) ---------------------------
+
+const DEFAULTS = { nameOne: 'karar', nameTwo: 'dania' };
+
+function parseName(value: unknown, fallback: string): string {
+  if (typeof value !== 'string') return fallback;
+  const trimmed = value.trim().slice(0, 24);
+  return trimmed || fallback;
+}
 
 router.get('/settings', coupleAuth, async (_req, res) => {
   try {
     const settings = await prisma.coupleSettings.findUnique({ where: { id: 'main' } });
-    res.json(settings || { id: 'main', anniversary: null, nextDate: null });
+    if (!settings) {
+      return res.json({ id: 'main', ...DEFAULTS, anniversary: null, nextDate: null });
+    }
+    // A row saved before the names existed still answers with something
+    res.json({
+      ...settings,
+      nameOne: settings.nameOne || DEFAULTS.nameOne,
+      nameTwo: settings.nameTwo || DEFAULTS.nameTwo,
+    });
   } catch (error) {
     console.error('Settings fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch settings' });
@@ -201,7 +208,10 @@ router.put('/settings', coupleAuth, async (req, res) => {
     const nextDate =
       typeof req.body?.nextDate === 'string' ? req.body.nextDate.trim().slice(0, 60) || null : null;
 
-    const data = { anniversary, nextDate };
+    const nameOne = parseName(req.body?.nameOne, DEFAULTS.nameOne);
+    const nameTwo = parseName(req.body?.nameTwo, DEFAULTS.nameTwo);
+
+    const data = { nameOne, nameTwo, anniversary, nextDate };
     const settings = await prisma.coupleSettings.upsert({
       where: { id: 'main' },
       update: data,

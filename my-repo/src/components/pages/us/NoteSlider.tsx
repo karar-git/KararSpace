@@ -97,7 +97,6 @@ export default function NoteSlider({
         >
           {notes.map((note, index) => {
             const active = index === activeIndex;
-            const color = note.author === 'karar' ? 'var(--karar)' : 'var(--dania)';
             return (
               <div
                 key={note.id}
@@ -119,7 +118,7 @@ export default function NoteSlider({
                 }}
               >
                 <div className="us-card-top">
-                  <span className={`us-author ${note.author}`}>{note.author}</span>
+                  <span className="us-card-when">{addedTag(note.createdAt)}</span>
                   <button
                     type="button"
                     className="us-heart-btn"
@@ -132,8 +131,8 @@ export default function NoteSlider({
                   >
                     <Heart
                       size={21}
-                      fill={note.done ? color : 'none'}
-                      stroke={note.done ? color : 'var(--card-border-active)'}
+                      fill={note.done ? 'var(--accent)' : 'none'}
+                      stroke={note.done ? 'var(--accent)' : 'var(--card-border-active)'}
                     />
                   </button>
                 </div>
@@ -142,7 +141,7 @@ export default function NoteSlider({
 
                 <div className="us-card-tag">
                   {note.photoUrl && <span className="us-card-photo-dot" />}
-                  {note.done ? 'talked about' : addedTag(note.createdAt)}
+                  {note.done ? 'talked about' : 'up next'}
                 </div>
               </div>
             );

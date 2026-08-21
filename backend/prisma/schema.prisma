@@ -165,7 +165,7 @@ model Subscriber {
 model Note {
   id        String    @id @default(cuid())
   body      String
-  author    String // 'karar' | 'dania'
+  author    String    @default("us") // kept for old rows; notes are not attributed
   photoUrl  String?
   spinLabel String? // short two-line label for the wheel
   done      Boolean   @default(false)
@@ -174,9 +174,11 @@ model Note {
   updatedAt DateTime  @updatedAt
 }
 
-// Settings for the private page (anniversary, next date)
+// Settings for the private page (the two names, anniversary, next date)
 model CoupleSettings {
   id          String    @id @default("main")
+  nameOne     String?
+  nameTwo     String?
   anniversary DateTime?
   nextDate    String?
   updatedAt   DateTime  @updatedAt

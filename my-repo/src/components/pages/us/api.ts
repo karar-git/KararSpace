@@ -2,14 +2,10 @@ const API_ROOT =
   import.meta.env.PUBLIC_API_URL || 'https://kararspace-production.up.railway.app/api';
 const BASE = `${API_ROOT}/us`;
 const TOKEN_KEY = 'us:token';
-const WHO_KEY = 'us:who';
-
-export type Author = 'karar' | 'dania';
 
 export interface Note {
   id: string;
   body: string;
-  author: Author;
   photoUrl: string | null;
   spinLabel: string | null;
   done: boolean;
@@ -18,6 +14,8 @@ export interface Note {
 }
 
 export interface Settings {
+  nameOne: string;
+  nameTwo: string;
   anniversary: string | null;
   nextDate: string | null;
 }
@@ -36,22 +34,6 @@ export function setToken(token: string | null) {
     else localStorage.removeItem(TOKEN_KEY);
   } catch {
     /* private mode — the session just will not stick */
-  }
-}
-
-export function getWho(): Author {
-  try {
-    return localStorage.getItem(WHO_KEY) === 'dania' ? 'dania' : 'karar';
-  } catch {
-    return 'karar';
-  }
-}
-
-export function setWho(who: Author) {
-  try {
-    localStorage.setItem(WHO_KEY, who);
-  } catch {
-    /* ignore */
   }
 }
 
@@ -94,7 +76,7 @@ export const checkSession = () => request<{ ok: true }>('/session');
 
 export const listNotes = () => request<Note[]>('/notes');
 
-export const addNote = (input: { body: string; author: Author; photoUrl?: string | null }) =>
+export const addNote = (input: { body: string; photoUrl?: string | null }) =>
   request<Note>('/notes', { method: 'POST', body: JSON.stringify(input) });
 
 export const updateNote = (
