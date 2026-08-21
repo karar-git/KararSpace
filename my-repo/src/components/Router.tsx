@@ -12,6 +12,7 @@ import OpportunitiesPage from '@/components/pages/OpportunitiesPage';
 import HuaweiFreeCertificationsIraqPage from '@/components/pages/HuaweiFreeCertificationsIraqPage';
 import ExperiencePage from '@/components/pages/ExperiencePage';
 import PlanningPage from '@/components/pages/PlanningPage';
+import UsPage from '@/components/pages/us/UsPage';
 
 // Simple error fallback
 function ErrorPage() {
@@ -87,6 +88,10 @@ const router = createBrowserRouter([
       {
         path: "planning",
         element: <PlanningPage />,
+      },
+      {
+        path: "my_little_dndn",
+        element: <UsPage />,
       },
       {
         path: "huawei-free-certifications-iraq",

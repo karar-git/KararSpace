@@ -4,9 +4,13 @@ import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.js';
 import apiRoutes from './routes/api.js';
 import uploadRoutes from './routes/upload.js';
+import usRoutes from './routes/us.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Railway sits behind a proxy — needed for req.ip to be the real client
+app.set('trust proxy', 1);
 
 // Allowed origins for CORS
 const allowedOrigins = [
@@ -43,6 +47,7 @@ app.use(cookieParser());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/us', usRoutes);
 app.use('/api', uploadRoutes);
 app.use('/api', apiRoutes);
 

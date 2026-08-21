@@ -15,7 +15,11 @@ export function authMiddleware(req: AuthRequest, res: Response, next: NextFuncti
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { adminId: string };
+    const decoded = jwt.verify(token, JWT_SECRET) as { adminId?: string; scope?: string };
+    // Tokens issued for other scopes (e.g. the private couple page) are not admin tokens
+    if (!decoded.adminId || decoded.scope) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
     req.adminId = decoded.adminId;
     next();
   } catch {
