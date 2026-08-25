@@ -861,3 +861,83 @@
 }
 
 .us-field input:focus { border-color: var(--card-border-active); }
+
+/* ---- the list switcher ---------------------------------------------- */
+
+.us-lists {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 16px;
+}
+
+.us-lists-scroll {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 6px;
+  margin: -2px -2px -6px;
+  scrollbar-width: none;
+}
+
+.us-lists-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.us-listpill {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+}
+
+.us-listpill:hover {
+  color: var(--text);
+  border-color: var(--card-border-active);
+}
+
+.us-listpill.on {
+  color: var(--text);
+  border-color: var(--accent);
+  background: var(--soft);
+}
+
+.us-listpill-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.us-listpill.add {
+  flex: 0 0 auto;
+  border-style: dashed;
+  color: var(--accent);
+  /* Sits outside the scroller, so a long row of lists slides under nothing */
+  box-shadow: -10px 0 12px 6px var(--bg);
+}
+
+.us-listpill.add:hover {
+  border-color: var(--accent);
+  background: var(--soft);
+}

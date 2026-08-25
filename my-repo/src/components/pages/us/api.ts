@@ -3,8 +3,15 @@ const API_ROOT =
 const BASE = `${API_ROOT}/us`;
 const TOKEN_KEY = 'us:token';
 
+export interface NoteList {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
 export interface Note {
   id: string;
+  listId: string | null;
   body: string;
   photoUrl: string | null;
   spinLabel: string | null;
@@ -76,21 +83,37 @@ export const checkSession = () => request<{ ok: true }>('/session');
 
 export const listNotes = () => request<Note[]>('/notes');
 
-export const addNote = (input: { body: string; photoUrl?: string | null }) =>
+export const addNote = (input: { body: string; photoUrl?: string | null; listId?: string | null }) =>
   request<Note>('/notes', { method: 'POST', body: JSON.stringify(input) });
 
 export const updateNote = (
   id: string,
-  input: Partial<Pick<Note, 'done' | 'body' | 'spinLabel' | 'photoUrl'>>
+  input: Partial<Pick<Note, 'done' | 'body' | 'spinLabel' | 'photoUrl' | 'listId'>>
 ) => request<Note>(`/notes/${id}`, { method: 'PATCH', body: JSON.stringify(input) });
 
 export const deleteNote = (id: string) =>
   request<{ success: true }>(`/notes/${id}`, { method: 'DELETE' });
 
+export const listLists = () => request<NoteList[]>('/lists');
+
+export const addList = (name: string) =>
+  request<NoteList>('/lists', { method: 'POST', body: JSON.stringify({ name }) });
+
+export const renameList = (id: string, name: string) =>
+  request<NoteList>(`/lists/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) });
+
+export const deleteList = (id: string) =>
+  request<{ success: true }>(`/lists/${id}`, { method: 'DELETE' });
+
 export const getSettings = () => request<Settings>('/settings');
 
 export const saveSettings = (input: Settings) =>
   request<Settings>('/settings', { method: 'PUT', body: JSON.stringify(input) });
+
+// Photos come back as a path under the API; older ones may be absolute
+export function photoSrc(url: string): string {
+  return /^https?:\/\//.test(url) ? url : `${BASE}${url.replace(/^\/us/, '')}`;
+}
 
 export async function uploadPhoto(file: File): Promise<string> {
   const form = new FormData();

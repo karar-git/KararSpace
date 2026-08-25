@@ -161,7 +161,16 @@ model Subscriber {
 
 // ============ private: /my_little_dndn ============
 
-// A note on the shared list — something to talk about on the next date
+// A list of notes — "the date list" is the first one, either of them can add more
+model NoteList {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  notes     Note[]
+}
+
+// A note on a shared list — something to talk about on the next date
 model Note {
   id        String    @id @default(cuid())
   body      String
@@ -170,8 +179,23 @@ model Note {
   spinLabel String? // short two-line label for the wheel
   done      Boolean   @default(false)
   doneAt    DateTime?
+  // Nullable on purpose: adding it this way cannot drop the notes already here.
+  // Anything still null is adopted by the first list on boot.
+  listId    String?
+  list      NoteList? @relation(fields: [listId], references: [id])
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  @@index([listId])
+}
+
+// Photos live here rather than in a third-party bucket — it is a handful of
+// images between two people, and the id is what keeps them unlisted
+model UsPhoto {
+  id        String   @id
+  mime      String
+  bytes     Bytes
+  createdAt DateTime @default(now())
 }
 
 // Settings for the private page (the two names, anniversary, next date)

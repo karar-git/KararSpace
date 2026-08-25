@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import crypto from 'crypto';
 import multer from 'multer';
-import { v2 as cloudinary } from 'cloudinary';
 import prisma from '../lib/prisma.js';
 import {
   checkPassword,
@@ -11,12 +10,6 @@ import {
 } from '../middleware/couple.js';
 
 const router = Router();
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 // Nothing here should ever be indexed or cached by anything in between
 router.use((_req, res, next) => {
@@ -79,6 +72,93 @@ router.get('/session', coupleAuth, (_req, res) => {
   res.json({ ok: true });
 });
 
+// ---- lists --------------------------------------------------------------
+
+// The list every existing note belongs to, the first time this code runs
+const FIRST_LIST_NAME = 'the date list';
+
+// Notes written before lists existed have a null listId. The first list adopts
+// them — once per boot, so the polling loop is not writing every few seconds.
+let adopted = false;
+
+async function ensureLists() {
+  const lists = await prisma.noteList.findMany({ orderBy: { createdAt: 'asc' } });
+
+  if (!lists.length) {
+    const first = await prisma.noteList.create({ data: { name: FIRST_LIST_NAME } });
+    await prisma.note.updateMany({ where: { listId: null }, data: { listId: first.id } });
+    adopted = true;
+    return [first];
+  }
+
+  if (!adopted) {
+    await prisma.note.updateMany({ where: { listId: null }, data: { listId: lists[0].id } });
+    adopted = true;
+  }
+
+  return lists;
+}
+
+function parseListName(value: unknown): string {
+  return typeof value === 'string' ? value.trim().slice(0, 40) : '';
+}
+
+router.get('/lists', coupleAuth, async (_req, res) => {
+  try {
+    res.json(await ensureLists());
+  } catch (error) {
+    console.error('Lists fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch lists' });
+  }
+});
+
+router.post('/lists', coupleAuth, async (req, res) => {
+  try {
+    const name = parseListName(req.body?.name);
+    if (!name) return res.status(400).json({ error: 'Give the list a name' });
+
+    await ensureLists();
+    const list = await prisma.noteList.create({ data: { name } });
+    res.json(list);
+  } catch (error) {
+    console.error('List create error:', error);
+    res.status(500).json({ error: 'Failed to add the list' });
+  }
+});
+
+router.patch('/lists/:id', coupleAuth, async (req, res) => {
+  try {
+    const name = parseListName(req.body?.name);
+    if (!name) return res.status(400).json({ error: 'Give the list a name' });
+
+    const list = await prisma.noteList.update({ where: { id: req.params.id }, data: { name } });
+    res.json(list);
+  } catch (error) {
+    console.error('List rename error:', error);
+    res.status(500).json({ error: 'Failed to rename the list' });
+  }
+});
+
+router.delete('/lists/:id', coupleAuth, async (req, res) => {
+  try {
+    const lists = await ensureLists();
+    if (lists.length < 2) {
+      return res.status(400).json({ error: 'That is the only list — keep it' });
+    }
+    if (!lists.some((list) => list.id === req.params.id)) {
+      return res.status(404).json({ error: 'No such list' });
+    }
+
+    // The notes go with it; the confirm on the other end says how many
+    await prisma.note.deleteMany({ where: { listId: req.params.id } });
+    await prisma.noteList.delete({ where: { id: req.params.id } });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('List delete error:', error);
+    res.status(500).json({ error: 'Failed to remove the list' });
+  }
+});
+
 // ---- notes --------------------------------------------------------------
 
 // A short two-line label for the wheel: the first couple of words that carry
@@ -121,8 +201,14 @@ router.post('/notes', coupleAuth, async (req, res) => {
     if (!body) return res.status(400).json({ error: 'Write something first' });
     if (body.length > 2000) return res.status(400).json({ error: 'That is a long one — trim it a bit' });
 
+    // An unknown list would be a stale tab; put the note on the first list
+    // rather than dropping what was just written.
+    const lists = await ensureLists();
+    const asked = typeof req.body?.listId === 'string' ? req.body.listId : null;
+    const listId = lists.find((list) => list.id === asked)?.id ?? lists[0].id;
+
     const note = await prisma.note.create({
-      data: { body, photoUrl, spinLabel },
+      data: { body, photoUrl, spinLabel, listId },
     });
     res.json(note);
   } catch (error) {
@@ -147,6 +233,10 @@ router.patch('/notes/:id', coupleAuth, async (req, res) => {
     }
     if (req.body?.photoUrl === null || typeof req.body?.photoUrl === 'string') {
       data.photoUrl = req.body.photoUrl;
+    }
+    if (typeof req.body?.listId === 'string') {
+      const lists = await ensureLists();
+      if (lists.some((list) => list.id === req.body.listId)) data.listId = req.body.listId;
     }
 
     if (!Object.keys(data).length) {
@@ -226,9 +316,11 @@ router.put('/settings', coupleAuth, async (req, res) => {
 
 // ---- photos -------------------------------------------------------------
 
+// Photos are kept in our own database and served back from here. No third
+// party involved, and the random id is the only way to reach one.
 const photoUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 8 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith('image/')) cb(null, true);
     else cb(new Error('Only image files are allowed'));
@@ -238,32 +330,34 @@ const photoUpload = multer({
 router.post('/photo', coupleAuth, photoUpload.single('photo'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No photo provided' });
-    if (!process.env.CLOUDINARY_CLOUD_NAME) {
-      return res.status(500).json({ error: 'Photo storage not configured' });
-    }
 
-    // Random public id so the URL cannot be guessed from the folder listing
-    const publicId = crypto.randomBytes(16).toString('hex');
-
-    const result = await new Promise<any>((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: 'karar-portfolio/us',
-          public_id: publicId,
-          transformation: [
-            { width: 1400, height: 1400, crop: 'limit' },
-            { quality: 'auto', fetch_format: 'auto' },
-          ],
-        },
-        (error, uploaded) => (error ? reject(error) : resolve(uploaded))
-      );
-      uploadStream.end(req.file!.buffer);
+    const id = crypto.randomBytes(16).toString('hex');
+    await prisma.usPhoto.create({
+      data: { id, mime: req.file.mimetype, bytes: new Uint8Array(req.file.buffer) },
     });
 
-    res.json({ url: result.secure_url });
+    // Relative on purpose — the other end knows where the API lives
+    res.json({ url: `/us/photo/${id}` });
   } catch (error: any) {
     console.error('Photo upload error:', error);
     res.status(500).json({ error: error.message || 'Upload failed' });
+  }
+});
+
+// Open, like the image URLs of any host would be — an <img> cannot carry the
+// token. A 32-character random id is what keeps it unlisted.
+router.get('/photo/:id', async (req, res) => {
+  try {
+    const photo = await prisma.usPhoto.findUnique({ where: { id: req.params.id } });
+    if (!photo) return res.status(404).end();
+
+    // Overrides the no-store above: the bytes at this id never change
+    res.set('Cache-Control', 'private, max-age=31536000, immutable');
+    res.type(photo.mime);
+    res.send(Buffer.from(photo.bytes));
+  } catch (error) {
+    console.error('Photo fetch error:', error);
+    res.status(500).end();
   }
 });
 

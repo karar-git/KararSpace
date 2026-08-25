@@ -8,24 +8,31 @@ import Wheel from './Wheel';
 import { daysBetween, prettyDate, toDateInput } from './dates';
 import {
   LockedError,
+  addList,
   addNote,
   checkSession,
+  deleteList,
   deleteNote,
   getSettings,
   getToken,
+  listLists,
   listNotes,
+  photoSrc,
+  renameList,
   saveSettings,
   setToken,
   unlock,
   updateNote,
   uploadPhoto,
   type Note,
+  type NoteList,
   type Settings,
 } from './api';
 
 type Screen = 'list' | 'spin' | 'done';
 
 const POLL_MS = 7000;
+const LIST_KEY = 'us:list';
 const MAX_SEGMENTS = 6;
 const DEFAULT_NAMES = { nameOne: 'karar', nameTwo: 'dania' };
 
@@ -200,7 +207,7 @@ function AddRow({
       <div className="us-add-row">
         {photo ? (
           <button type="button" className="us-chip on" onClick={() => setPhoto(null)}>
-            <img className="us-thumb" src={photo.preview} alt="" />
+            <img className="us-thumb" src={photoSrc(photo.preview)} alt="" />
             remove
           </button>
         ) : (
@@ -227,6 +234,45 @@ function AddRow({
           <ArrowUp />
         </button>
       </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
+function ListBar({
+  lists,
+  activeId,
+  counts,
+  onPick,
+  onNew,
+}: {
+  lists: NoteList[];
+  activeId: string | null;
+  counts: Record<string, number>;
+  onPick: (id: string) => void;
+  onNew: () => void;
+}) {
+  if (!lists.length) return null;
+
+  return (
+    <div className="us-lists">
+      <div className="us-lists-scroll">
+        {lists.map((list) => (
+          <button
+            key={list.id}
+            type="button"
+            className={list.id === activeId ? 'us-listpill on' : 'us-listpill'}
+            onClick={() => onPick(list.id)}
+          >
+            {list.name}
+            {counts[list.id] ? <span className="us-listpill-count">{counts[list.id]}</span> : null}
+          </button>
+        ))}
+      </div>
+      <button type="button" className="us-listpill add" title="new list" onClick={onNew}>
+        + list
+      </button>
     </div>
   );
 }
@@ -322,7 +368,15 @@ function SettingsModal({
 
 export default function UsPage() {
   const [unlocked, setUnlocked] = useState<boolean | null>(null);
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [allNotes, setAllNotes] = useState<Note[]>([]);
+  const [lists, setLists] = useState<NoteList[]>([]);
+  const [activeListId, setActiveListId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(LIST_KEY);
+    } catch {
+      return null;
+    }
+  });
   const [settings, setSettings] = useState<Settings | null>(null);
   const [screen, setScreen] = useState<Screen>('list');
   const [activeIndex, setActiveIndex] = useState(0);
@@ -386,9 +440,14 @@ export default function UsPage() {
   const refresh = useCallback(async () => {
     if (writing.current > 0) return;
     try {
-      const [freshNotes, freshSettings] = await Promise.all([listNotes(), getSettings()]);
-      setNotes(freshNotes);
+      const [freshNotes, freshSettings, freshLists] = await Promise.all([
+        listNotes(),
+        getSettings(),
+        listLists(),
+      ]);
+      setAllNotes(freshNotes);
       setSettings(freshSettings);
+      setLists(freshLists);
     } catch (err) {
       handleError(err);
     }
@@ -408,6 +467,26 @@ export default function UsPage() {
       document.removeEventListener('visibilitychange', onVisible);
     };
   }, [unlocked, refresh]);
+
+  // A list id from another phone or a removed list falls back to the first
+  const activeList = useMemo(
+    () => lists.find((list) => list.id === activeListId) ?? lists[0] ?? null,
+    [lists, activeListId]
+  );
+
+  // Everything below this line works on one list at a time
+  const notes = useMemo(
+    () => (activeList ? allNotes.filter((note) => note.listId === activeList.id) : []),
+    [allNotes, activeList]
+  );
+
+  const listCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    allNotes.forEach((note) => {
+      if (note.listId && !note.done) counts[note.listId] = (counts[note.listId] ?? 0) + 1;
+    });
+    return counts;
+  }, [allNotes]);
 
   const open = useMemo(() => notes.filter((note) => !note.done), [notes]);
   const doneNotes = useMemo(() => notes.filter((note) => note.done), [notes]);
@@ -431,7 +510,7 @@ export default function UsPage() {
   const toggleDone = async (note: Note) => {
     const next = !note.done;
     // Optimistic — the heart should fill the instant it is tapped
-    setNotes((current) =>
+    setAllNotes((current) =>
       current.map((item) =>
         item.id === note.id
           ? { ...item, done: next, doneAt: next ? new Date().toISOString() : null }
@@ -451,16 +530,72 @@ export default function UsPage() {
   };
 
   const add = async (body: string, photoUrl: string | null) => {
-    const note = await addNote({ body, photoUrl });
-    setNotes((current) => [note, ...current]);
+    const note = await addNote({ body, photoUrl, listId: activeList?.id ?? null });
+    setAllNotes((current) => [note, ...current]);
     setActiveIndex(0);
+  };
+
+  const chooseList = (id: string) => {
+    setActiveListId(id);
+    setActiveIndex(0);
+    setResult(null);
+    try {
+      localStorage.setItem(LIST_KEY, id);
+    } catch {
+      /* private mode — it just will not be remembered */
+    }
+  };
+
+  const createList = async () => {
+    const name = window.prompt('name for the new list');
+    if (name === null || !name.trim()) return;
+    try {
+      const created = await addList(name.trim());
+      setLists((current) => [...current, created]);
+      chooseList(created.id);
+      setScreen('list');
+    } catch (err) {
+      handleError(err);
+    }
+  };
+
+  const renameActiveList = async () => {
+    if (!activeList) return;
+    const name = window.prompt('rename this list', activeList.name);
+    if (name === null || !name.trim()) return;
+    try {
+      const updated = await renameList(activeList.id, name.trim());
+      setLists((current) => current.map((list) => (list.id === updated.id ? updated : list)));
+    } catch (err) {
+      handleError(err);
+    }
+  };
+
+  const removeActiveList = async () => {
+    if (!activeList || lists.length < 2) return;
+    const count = notes.length;
+    const question = count
+      ? `remove "${activeList.name}" and its ${count} note${count === 1 ? '' : 's'}?`
+      : `remove "${activeList.name}"?`;
+    if (!window.confirm(question)) return;
+
+    const gone = activeList.id;
+    try {
+      await deleteList(gone);
+      const rest = lists.filter((list) => list.id !== gone);
+      setAllNotes((current) => current.filter((note) => note.listId !== gone));
+      setLists(rest);
+      chooseList(rest[0].id);
+    } catch (err) {
+      handleError(err);
+    }
   };
 
   const remove = async (note: Note) => {
     if (!window.confirm('remove this note?')) return;
     try {
       await deleteNote(note.id);
-      setNotes((current) => current.filter((item) => item.id !== note.id));
+      setAllNotes((current) => current.filter((item) => item.id !== note.id));
       setResult((current) => (current && current.id === note.id ? null : current));
     } catch (err) {
       handleError(err);
@@ -474,7 +609,7 @@ export default function UsPage() {
     const spinLabel = next.trim().split(/\s+/).slice(0, 2).join('\n');
     try {
       const updated = await updateNote(note.id, { spinLabel });
-      setNotes((all) => all.map((item) => (item.id === updated.id ? updated : item)));
+      setAllNotes((all) => all.map((item) => (item.id === updated.id ? updated : item)));
     } catch (err) {
       handleError(err);
     }
@@ -535,14 +670,38 @@ export default function UsPage() {
           </nav>
         </header>
 
+        <ListBar
+          lists={lists}
+          activeId={activeList?.id ?? null}
+          counts={listCounts}
+          onPick={chooseList}
+          onNew={createList}
+        />
+
         <DayCounter settings={settings} onEdit={() => setShowSettings(true)} />
 
         {screen === 'list' && (
           <>
             <div className="us-section">
-              <h2>our list</h2>
+              <h2>{activeList?.name ?? 'our list'}</h2>
               <div className="us-progress">
                 {open.length} to go · {doneNotes.length} talked about
+                {activeList && (
+                  <>
+                    {' · '}
+                    <button type="button" className="us-linkish" onClick={renameActiveList}>
+                      rename
+                    </button>
+                    {lists.length > 1 && (
+                      <>
+                        {' · '}
+                        <button type="button" className="us-linkish" onClick={removeActiveList}>
+                          remove list
+                        </button>
+                      </>
+                    )}
+                  </>
+                )}
               </div>
             </div>
 
@@ -587,10 +746,10 @@ export default function UsPage() {
               <h2>Can't decide?</h2>
               <p>
                 {segments.length === 0
-                  ? 'add something to the list first.'
+                  ? `nothing on ${activeList?.name ?? 'this list'} yet.`
                   : open.length === 0
-                    ? 'everything is hearted. add something new.'
-                    : 'let it choose for us'}
+                    ? 'everything here is hearted. add something new.'
+                    : `let it choose from ${activeList?.name ?? 'the list'}`}
               </p>
             </div>
 

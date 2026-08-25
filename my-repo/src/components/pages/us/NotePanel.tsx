@@ -1,6 +1,6 @@
 import { Heart } from './icons';
 import { addedTag } from './dates';
-import type { Note } from './api';
+import { photoSrc, type Note } from './api';
 
 interface NotePanelProps {
   note: Note;
@@ -27,7 +27,7 @@ export default function NotePanel({
       </p>
       <div className="us-panel-meta">{addedTag(note.createdAt)}</div>
 
-      {note.photoUrl && <img className="us-panel-photo" src={note.photoUrl} alt="" />}
+      {note.photoUrl && <img className="us-panel-photo" src={photoSrc(note.photoUrl)} alt="" />}
 
       <div className="us-panel-actions">
         <button
