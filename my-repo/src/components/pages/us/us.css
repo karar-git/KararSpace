@@ -941,3 +941,48 @@
   border-color: var(--accent);
   background: var(--soft);
 }
+
+/* ---- changing the password ------------------------------------------ */
+
+.us-pw {
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--card-border);
+}
+
+.us-pw.open {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.us-pw-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-family: var(--ui);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.us-pw-hint {
+  margin: -4px 0 0;
+  font-family: var(--ui);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted-light);
+}
+
+.us-pw-note {
+  font-family: var(--ui);
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.us-pw-note.good {
+  color: var(--muted);
+}

@@ -205,5 +205,9 @@ model CoupleSettings {
   nameTwo     String?
   anniversary DateTime?
   nextDate    String?
+  // The shared password, once it has been changed from the page. Until then
+  // the COUPLE_PASSWORD env var is what counts. Nullable, so adding it is free.
+  passwordHash      String?
+  passwordChangedAt DateTime?
   updatedAt   DateTime  @updatedAt
 }

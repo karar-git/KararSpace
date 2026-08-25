@@ -10,6 +10,7 @@ import {
   LockedError,
   addList,
   addNote,
+  changePassword,
   checkSession,
   deleteList,
   deleteNote,
@@ -279,6 +280,90 @@ function ListBar({
 
 /* ------------------------------------------------------------------ */
 
+// Its own little form: saving the names should never be able to change the
+// password by accident, and vice versa.
+function PasswordSection() {
+  const [open, setOpen] = useState(false);
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<{ good: boolean; text: string } | null>(null);
+
+  if (!open) {
+    return (
+      <div className="us-pw">
+        <button type="button" className="us-linkish" onClick={() => setOpen(true)}>
+          change our password
+        </button>
+      </div>
+    );
+  }
+
+  const submit = async () => {
+    if (busy) return;
+    setBusy(true);
+    setNote(null);
+    try {
+      await changePassword(current, next);
+      setCurrent('');
+      setNext('');
+      setNote({ good: true, text: 'changed. tell the other one.' });
+    } catch (err) {
+      setNote({ good: false, text: (err as Error).message });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="us-pw open">
+      <div className="us-pw-head">
+        <span>our password</span>
+        <button type="button" className="us-linkish" onClick={() => setOpen(false)}>
+          not now
+        </button>
+      </div>
+      <label className="us-field">
+        <span>the one we use now</span>
+        <input
+          type="password"
+          autoComplete="off"
+          value={current}
+          onChange={(event) => setCurrent(event.target.value)}
+        />
+      </label>
+      <label className="us-field">
+        <span>the new one</span>
+        <input
+          type="password"
+          autoComplete="off"
+          value={next}
+          onChange={(event) => setNext(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') submit();
+          }}
+        />
+      </label>
+      <p className="us-pw-hint">
+        this phone stays open. the other one will ask for the new word.
+      </p>
+      <div className="us-panel-actions">
+        <button
+          type="button"
+          className="us-pill"
+          disabled={busy || !current.trim() || !next.trim()}
+          onClick={submit}
+        >
+          {busy ? 'changing…' : 'change it'}
+        </button>
+      </div>
+      {note && <div className={note.good ? 'us-pw-note good' : 'us-pw-note'}>{note.text}</div>}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
 function SettingsModal({
   settings,
   onClose,
@@ -337,6 +422,7 @@ function SettingsModal({
             onChange={(event) => setNextDate(event.target.value)}
           />
         </label>
+        <PasswordSection />
         <div className="us-panel-actions">
           <button
             type="button"

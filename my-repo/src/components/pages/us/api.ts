@@ -94,6 +94,16 @@ export const updateNote = (
 export const deleteNote = (id: string) =>
   request<{ success: true }>(`/notes/${id}`, { method: 'DELETE' });
 
+// Hands back a fresh token, so this device stays unlocked and the other one
+// gets asked for the new word
+export async function changePassword(current: string, next: string): Promise<void> {
+  const data = await request<{ token: string }>('/password', {
+    method: 'PUT',
+    body: JSON.stringify({ current, next }),
+  });
+  setToken(data.token);
+}
+
 export const listLists = () => request<NoteList[]>('/lists');
 
 export const addList = (name: string) =>

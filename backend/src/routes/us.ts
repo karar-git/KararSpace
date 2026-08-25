@@ -7,6 +7,7 @@ import {
   coupleAuth,
   generateCoupleToken,
   isConfigured,
+  setPassword,
 } from '../middleware/couple.js';
 
 const router = Router();
@@ -47,7 +48,7 @@ function recordAttempt(ip: string) {
 router.post('/unlock', async (req, res) => {
   const ip = req.ip || 'unknown';
 
-  if (!isConfigured()) {
+  if (!(await isConfigured())) {
     return res.status(503).json({ error: 'not-configured' });
   }
 
@@ -58,7 +59,7 @@ router.post('/unlock', async (req, res) => {
   // Slow every attempt down a little, right or wrong
   await new Promise((resolve) => setTimeout(resolve, 400));
 
-  if (!checkPassword(req.body?.password)) {
+  if (!(await checkPassword(req.body?.password))) {
     recordAttempt(ip);
     return res.status(401).json({ error: 'that is not it' });
   }
@@ -70,6 +71,38 @@ router.post('/unlock', async (req, res) => {
 // Is the token still good?
 router.get('/session', coupleAuth, (_req, res) => {
   res.json({ ok: true });
+});
+
+// Change the shared password from the page itself
+router.put('/password', coupleAuth, async (req, res) => {
+  try {
+    const current = typeof req.body?.current === 'string' ? req.body.current : '';
+    const next = typeof req.body?.next === 'string' ? req.body.next.trim() : '';
+
+    // Same deliberate pause as the unlock screen
+    await new Promise((resolve) => setTimeout(resolve, 400));
+
+    if (!(await checkPassword(current))) {
+      return res.status(400).json({ error: 'the current one is not right' });
+    }
+    if (next.length < 4) {
+      return res.status(400).json({ error: 'make it at least 4 characters' });
+    }
+    if (next.length > 200) {
+      return res.status(400).json({ error: 'that is a very long password' });
+    }
+    if (await checkPassword(next)) {
+      return res.status(400).json({ error: 'that is the one you already have' });
+    }
+
+    await setPassword(next);
+
+    // A fresh token so this phone stays in; the other one asks for the new word
+    res.json({ token: generateCoupleToken() });
+  } catch (error) {
+    console.error('Password change error:', error);
+    res.status(500).json({ error: 'Failed to change the password' });
+  }
 });
 
 // ---- lists --------------------------------------------------------------
