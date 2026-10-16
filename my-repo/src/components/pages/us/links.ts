@@ -1,3 +1,5 @@
+import { API_BASE } from './api';
+
 // Most notes on "for the future" are a pasted reel. Show them as a card with a
 // label, and keep any words typed after the link as its caption.
 
@@ -12,6 +14,10 @@ export interface FoundLink {
   label: string;
   /** Whatever was written around the link, or '' */
   caption: string;
+  /** A picture for the card, if the link has one we can show */
+  thumb: string | null;
+  /** A player that can sit inside our page */
+  embed: string | null;
 }
 
 const LABELS: Record<LinkKind, string> = {
@@ -32,7 +38,21 @@ export function findLink(body: string): FoundLink | null {
   else if (/(youtube\.com|youtu\.be)\//i.test(url)) kind = 'video';
 
   const caption = body.replace(url, ' ').replace(/\s+/g, ' ').trim();
-  return { url, kind, label: LABELS[kind], caption };
+  let thumb: string | null = null;
+  let embed: string | null = null;
+
+  const youtube = url.match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{11})/);
+  const instagram = url.match(/instagram\.com\/(?:reels?|p|tv)\/([A-Za-z0-9_-]+)/i);
+  if (kind === 'video' && youtube) {
+    thumb = `https://i.ytimg.com/vi/${youtube[1]}/hqdefault.jpg`;
+    embed = `https://www.youtube-nocookie.com/embed/${youtube[1]}?autoplay=1&playsinline=1&rel=0`;
+  } else if (instagram) {
+    // Our API keeps a copy of the cover; Instagram's own image links expire
+    thumb = `${API_BASE}/thumb/ig/${instagram[1]}`;
+    embed = `https://www.instagram.com/${kind === 'post' ? 'p' : 'reel'}/${instagram[1]}/embed/`;
+  }
+
+  return { url, kind, label: LABELS[kind], caption, thumb, embed };
 }
 
 /** What to show as a note's text: the caption for a link, else the body. */

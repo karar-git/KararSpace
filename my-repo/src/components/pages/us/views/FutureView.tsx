@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Composer, PlayIcon } from '../bits';
+import { Composer, PlayIcon, PlayerSheet } from '../bits';
 import NoteSheet, { type NoteActions } from '../NoteSheet';
-import { findLink } from '../links';
+import { findLink, type FoundLink } from '../links';
 import type { Note, NoteList } from '../api';
 
 const SHORT_MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
@@ -38,6 +38,8 @@ export default function FutureView({
 }) {
   const [all, setAll] = useState(false);
   const [sheetId, setSheetId] = useState<string | null>(null);
+  const [playing, setPlaying] = useState<FoundLink | null>(null);
+  const [brokenThumbs, setBrokenThumbs] = useState<Set<string>>(() => new Set());
   const sheetNote = notes.find((note) => note.id === sheetId) ?? null;
   const shown = all ? notes : notes.slice(0, FIRST_GLANCE);
   const hidden = notes.length - shown.length;
@@ -80,9 +82,19 @@ export default function FutureView({
                 className={dark ? 'us2-ticket dark' : 'us2-ticket'}
                 role="button"
                 tabIndex={0}
-                onClick={() => (link ? window.open(link.url, '_blank', 'noopener') : setSheetId(note.id))}
+                onClick={() => (link ? setPlaying(link) : setSheetId(note.id))}
                 onKeyDown={(event) => event.key === 'Enter' && setSheetId(note.id)}
               >
+                {link?.thumb && !brokenThumbs.has(note.id) && (
+                  <img
+                    className="us2-ticket-cover"
+                    src={link.thumb}
+                    alt=""
+                    loading="lazy"
+                    onError={() => setBrokenThumbs((current) => new Set(current).add(note.id))}
+                  />
+                )}
+                {link?.thumb && !brokenThumbs.has(note.id) && <span className="us2-ticket-shade" />}
                 <div className="us2-ticket-top">
                   {dark && (
                     <span className="us2-ticket-play">
@@ -132,6 +144,8 @@ export default function FutureView({
           </button>
         )}
       </div>
+
+      {playing && <PlayerSheet link={playing} onClose={() => setPlaying(null)} />}
 
       {sheetNote && (
         <NoteSheet

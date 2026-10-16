@@ -1,6 +1,7 @@
 const API_ROOT =
   import.meta.env.PUBLIC_API_URL || 'https://kararspace-production.up.railway.app/api';
 const BASE = `${API_ROOT}/us`;
+export const API_BASE = BASE;
 const TOKEN_KEY = 'us:token';
 
 export type Theme = 'deck' | 'someday' | 'places' | 'ritual' | 'dates';

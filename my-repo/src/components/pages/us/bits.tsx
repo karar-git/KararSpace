@@ -95,26 +95,87 @@ export function Grip({ onPointerDown, label = 'drag to move' }: {
   );
 }
 
-/** A reel, post or video as a card instead of a raw URL */
-export function LinkCard({ link, tone = 'light' }: { link: FoundLink; tone?: 'light' | 'dark' }) {
+/** A reel's or video's player, in a sheet. YouTube needs a referrer to play,
+    which the page itself does not send, so the frame asks for one. */
+export function PlayerSheet({ link, onClose }: { link: FoundLink; onClose: () => void }) {
   return (
-    <a
-      className={`us2-link ${tone}`}
-      href={link.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={(event) => event.stopPropagation()}
-    >
-      <span className="us2-link-play">
-        <PlayIcon />
-      </span>
-      <span className="us2-link-text">
+    <Sheet onClose={onClose} className="us2-player-sheet">
+      {link.embed ? (
+        <iframe
+          className={link.kind === 'video' ? 'us2-player video' : 'us2-player reel'}
+          src={link.embed}
+          title={link.label}
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+      ) : null}
+      <div className="us-panel-actions">
+        <a className="us-pill" href={link.url} target="_blank" rel="noopener noreferrer">
+          open in {link.kind === 'video' ? 'youtube' : 'instagram'}
+        </a>
+        <button type="button" className="us-pill ghost" onClick={onClose}>
+          close
+        </button>
+      </div>
+    </Sheet>
+  );
+}
+
+/** A reel, post or video as a picture with a play button instead of a raw URL.
+    YouTube plays right in the card; Instagram opens its own player in a sheet. */
+export function LinkCard({ link }: { link: FoundLink }) {
+  const [playing, setPlaying] = useState(false);
+  const [sheet, setSheet] = useState(false);
+  const [broken, setBroken] = useState(false);
+  const showThumb = !!link.thumb && !broken;
+
+  const play = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (!link.embed) {
+      window.open(link.url, '_blank', 'noopener');
+    } else if (link.kind === 'video') {
+      setPlaying(true);
+    } else {
+      setSheet(true);
+    }
+  };
+
+  return (
+    <div className={`us2-media ${link.kind}`} onClick={(event) => event.stopPropagation()}>
+      {playing && link.embed ? (
+        <iframe
+          className="us2-media-frame"
+          src={link.embed}
+          title={link.label}
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+      ) : (
+        <button type="button" className="us2-media-thumb" aria-label={`play the ${link.label}`} onClick={play}>
+          {showThumb ? (
+            <img src={link.thumb!} alt="" loading="lazy" onError={() => setBroken(true)} />
+          ) : (
+            <span className="us2-media-blank" />
+          )}
+          <span className="us2-media-play">
+            <PlayIcon size={22} />
+          </span>
+        </button>
+      )}
+      <a
+        className="us2-media-foot"
+        href={link.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(event) => event.stopPropagation()}
+      >
         <b>{link.label}</b>
-        <small>
-          tap to watch · opens {link.kind === 'video' ? 'youtube' : link.kind === 'link' ? 'it' : 'instagram'}
-        </small>
-      </span>
-    </a>
+        <small>open in {link.kind === 'video' ? 'youtube' : link.kind === 'link' ? 'a new tab' : 'instagram'} ↗</small>
+      </a>
+      {sheet && <PlayerSheet link={link} onClose={() => setSheet(false)} />}
+    </div>
   );
 }
 

@@ -279,3 +279,12 @@ model UsDateRating {
 
   @@unique([dateId, author, category])
 }
+
+// The preview image of a saved Instagram link. Instagram's own image links
+// expire, so the bytes are kept here the first time a note needs them.
+model UsLinkThumb {
+  key       String   @id // "ig:<shortcode>"
+  mime      String
+  bytes     Bytes
+  createdAt DateTime @default(now())
+}

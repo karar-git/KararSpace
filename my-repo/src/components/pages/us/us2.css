@@ -285,31 +285,100 @@
 .us2-big.small { min-height: 46px; border-radius: 999px; font-size: 13px; }
 .us2-big:disabled { opacity: 0.45; cursor: default; }
 
-.us2-link {
+/* A saved reel or video: its cover with a play button, and where it opens */
+.us2-media {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 16px;
-  background: var(--bg);
+  flex-direction: column;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #ffffff;
   border: 1.5px solid var(--card-border);
+}
+
+.us2-media-thumb,
+.us2-media-frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: #2c2230;
+}
+
+.us2-media.video .us2-media-thumb,
+.us2-media.video .us2-media-frame { aspect-ratio: 16 / 9; }
+
+.us2-media:not(.video) .us2-media-thumb { aspect-ratio: 4 / 5; max-height: 340px; }
+
+.us2-media-thumb img,
+.us2-media-blank {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.us2-media-blank { background: linear-gradient(160deg, #3a2b66, #5a4692); }
+
+.us2-media-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  transform: translate(-50%, -50%);
+  transition: transform 0.2s ease;
+}
+
+.us2-media.video .us2-media-play { width: 64px; height: 46px; border-radius: 14px; background: #ff0033; backdrop-filter: none; }
+.us2-media-thumb:active .us2-media-play { transform: translate(-50%, -50%) scale(0.92); }
+
+.us2-media-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
   color: var(--text);
   text-decoration: none;
 }
 
-.us2-link-play {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  flex-shrink: 0;
-  border-radius: 12px;
-  background: var(--accent);
+.us2-media-foot b { font-size: 13px; font-weight: 700; }
+.us2-media-foot small { font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+
+.us2-player { display: block; width: 100%; border: 0; border-radius: 16px; background: #000; }
+.us2-player.video { aspect-ratio: 16 / 9; }
+.us2-player.reel { height: min(72dvh, 680px); background: #ffffff; }
+
+/* Reels on "for the future" wear their cover under the night colours */
+.us2-ticket-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  pointer-events: none;
 }
 
-.us2-link-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.us2-link-text b { font-size: 13px; font-weight: 700; }
-.us2-link-text small { font-size: 11px; font-weight: 600; color: var(--muted); }
+/* Dark at the top and bottom where the words sit, clear in the middle */
+.us2-ticket-shade {
+  position: absolute !important;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(45, 33, 80, 0.85) 0%, rgba(45, 33, 80, 0.15) 45%, rgba(45, 33, 80, 0.2) 60%, rgba(45, 33, 80, 0.9) 100%);
+  pointer-events: none;
+}
+
+.us2-ticket.dark { overflow: hidden; }
+.us2-ticket.dark > :not(.us2-ticket-cover):not(.us2-ticket-shade) { position: relative; }
+.us2-ticket.dark .us2-ticket-text { text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
 
 .us2-grip {
   display: flex;
@@ -1021,7 +1090,7 @@
   color: var(--muted);
 }
 
-.us2-postcard .us2-link { background: #f3f9f5; border-color: transparent; }
+.us2-postcard .us2-media { border-color: #e6eee9; }
 
 .us2-postcard-input {
   width: 100%;
