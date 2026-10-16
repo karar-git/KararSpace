@@ -12,7 +12,8 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "thumbs": "tsx scripts/fetch-thumbs.ts"
   },
   "keywords": [],
   "author": "Karar Haitham",

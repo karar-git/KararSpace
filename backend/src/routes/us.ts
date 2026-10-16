@@ -9,7 +9,7 @@ import {
   isConfigured,
   setPassword,
 } from '../middleware/couple.js';
-import { findLink, isJunkLabel } from '../lib/links.js';
+import { fetchInstagramThumb, findLink, isJunkLabel } from '../lib/links.js';
 import datesRouter from './usDates.js';
 
 const router = Router();
@@ -542,34 +542,12 @@ router.put('/settings/views', coupleAuth, async (req, res) => {
 
 // ---- link previews --------------------------------------------------------
 
-// Instagram shows link-preview crawlers the reel's cover image. We fetch it
-// once per reel and keep the bytes, because Instagram's image links expire.
-// Only codes that appear in one of our notes are fetched, so this never works
-// as an open proxy.
-const CRAWLER_UA = 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)';
-const MAX_THUMB_BYTES = 5 * 1024 * 1024;
+// The cover of a saved reel, fetched once and kept, because Instagram's
+// image links expire. Only codes that appear in one of our notes are fetched,
+// so this never works as an open proxy. Instagram turns Railway's servers away,
+// so most covers arrive through `npm run thumbs` run from home instead.
 const thumbMisses = new Map<string, number>(); // code -> when it last failed
 const MISS_RETRY_MS = 60 * 60 * 1000;
-
-async function fetchInstagramThumb(code: string): Promise<{ mime: string; bytes: Buffer } | null> {
-  const page = await fetch(`https://www.instagram.com/p/${code}/`, {
-    headers: { 'User-Agent': CRAWLER_UA, 'Accept-Language': 'en' },
-    signal: AbortSignal.timeout(8000),
-  });
-  if (!page.ok) return null;
-  const html = await page.text();
-  const match = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/);
-  if (!match) return null;
-  const imageUrl = match[1].replace(/&amp;/g, '&');
-  if (!/^https:\/\/[^/]+\.(cdninstagram\.com|fbcdn\.net)\//.test(imageUrl)) return null;
-
-  const image = await fetch(imageUrl, { signal: AbortSignal.timeout(8000) });
-  const mime = image.headers.get('content-type') || '';
-  if (!image.ok || !mime.startsWith('image/')) return null;
-  const bytes = Buffer.from(await image.arrayBuffer());
-  if (bytes.length > MAX_THUMB_BYTES) return null;
-  return { mime, bytes };
-}
 
 // Open like /photo — an <img> cannot carry the token
 router.get('/thumb/ig/:code', async (req, res) => {
