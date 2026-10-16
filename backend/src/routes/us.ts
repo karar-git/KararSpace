@@ -9,6 +9,8 @@ import {
   isConfigured,
   setPassword,
 } from '../middleware/couple.js';
+import { findLink, isJunkLabel } from '../lib/links.js';
+import datesRouter from './usDates.js';
 
 const router = Router();
 
@@ -110,23 +112,86 @@ router.put('/password', coupleAuth, async (req, res) => {
 // The list every existing note belongs to, the first time this code runs
 const FIRST_LIST_NAME = 'the date list';
 
-// Notes written before lists existed have a null listId. The first list adopts
-// them — once per boot, so the polling loop is not writing every few seconds.
-let adopted = false;
+const THEMES = ['deck', 'someday', 'places', 'ritual', 'dates'] as const;
+type Theme = (typeof THEMES)[number];
 
-async function ensureLists() {
-  const lists = await prisma.noteList.findMany({ orderBy: { createdAt: 'asc' } });
+// Lists made before themes existed get a look from their name. Nothing is
+// written: a list keeps a null theme until someone picks one.
+function guessTheme(name: string): Theme {
+  const lower = name.toLowerCase();
+  if (lower.includes('future') || lower.includes('someday')) return 'someday';
+  if (lower.includes('place')) return 'places';
+  if (name.includes('🪞') || lower.includes('ritual')) return 'ritual';
+  if (name.includes('🦢') || lower.includes('our dates')) return 'dates';
+  return 'deck';
+}
 
-  if (!lists.length) {
-    const first = await prisma.noteList.create({ data: { name: FIRST_LIST_NAME } });
-    await prisma.note.updateMany({ where: { listId: null }, data: { listId: first.id } });
-    adopted = true;
-    return [first];
+function withTheme<T extends { name: string; theme: string | null }>(list: T) {
+  return { ...list, theme: (list.theme as Theme | null) ?? guessTheme(list.name) };
+}
+
+// Once-per-boot housekeeping. Each step only fills in values that were never
+// set, so running it again changes nothing.
+let tidied = false;
+
+async function tidyOnce(lists: { id: string; position: number }[]) {
+  if (tidied) return;
+  tidied = true;
+
+  // Notes written before lists existed have a null listId; the first list adopts them
+  await prisma.note.updateMany({ where: { listId: null }, data: { listId: lists[0].id } });
+
+  // Positions arrived after the data did. A list whose notes all still sit at
+  // 0 gets the order it always showed: newest first.
+  if (lists.length > 1 && lists.every((list) => list.position === 0)) {
+    await prisma.$transaction(
+      lists.map((list, index) =>
+        prisma.noteList.update({ where: { id: list.id }, data: { position: index } })
+      )
+    );
+  }
+  for (const list of lists) {
+    const notes = await prisma.note.findMany({
+      where: { listId: list.id },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, position: true },
+    });
+    if (notes.length > 1 && notes.every((note) => note.position === 0)) {
+      await prisma.$transaction(
+        notes.map((note, index) =>
+          prisma.note.update({ where: { id: note.id }, data: { position: index } })
+        )
+      );
+    }
   }
 
-  if (!adopted) {
-    await prisma.note.updateMany({ where: { listId: null }, data: { listId: lists[0].id } });
-    adopted = true;
+  // Link notes got wheel labels like "httpswwwinstagramcomreelDdIT"
+  const junk = await prisma.note.findMany({
+    where: { spinLabel: { startsWith: 'http' } },
+    select: { id: true, body: true, spinLabel: true },
+  });
+  for (const note of junk) {
+    if (!isJunkLabel(note.spinLabel)) continue;
+    await prisma.note.update({ where: { id: note.id }, data: { spinLabel: deriveSpinLabel(note.body) } });
+  }
+}
+
+async function ensureLists() {
+  const order = [{ position: 'asc' as const }, { createdAt: 'asc' as const }];
+  let lists = await prisma.noteList.findMany({ orderBy: order });
+
+  if (!lists.length) {
+    lists = [await prisma.noteList.create({ data: { name: FIRST_LIST_NAME } })];
+  }
+
+  if (!tidied) {
+    try {
+      await tidyOnce(lists);
+    } catch (error) {
+      // Never let housekeeping lock them out; it will try again next boot
+      console.error('Tidy error:', error);
+    }
+    lists = await prisma.noteList.findMany({ orderBy: order });
   }
 
   return lists;
@@ -136,9 +201,21 @@ function parseListName(value: unknown): string {
   return typeof value === 'string' ? value.trim().slice(0, 40) : '';
 }
 
+function parseTheme(value: unknown): Theme | null {
+  return typeof value === 'string' && (THEMES as readonly string[]).includes(value)
+    ? (value as Theme)
+    : null;
+}
+
+function parseIds(value: unknown): string[] | null {
+  if (!Array.isArray(value) || value.length > 500) return null;
+  if (!value.every((id) => typeof id === 'string')) return null;
+  return value as string[];
+}
+
 router.get('/lists', coupleAuth, async (_req, res) => {
   try {
-    res.json(await ensureLists());
+    res.json((await ensureLists()).map(withTheme));
   } catch (error) {
     console.error('Lists fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch lists' });
@@ -150,25 +227,59 @@ router.post('/lists', coupleAuth, async (req, res) => {
     const name = parseListName(req.body?.name);
     if (!name) return res.status(400).json({ error: 'Give the list a name' });
 
-    await ensureLists();
-    const list = await prisma.noteList.create({ data: { name } });
-    res.json(list);
+    const lists = await ensureLists();
+    const position = lists.reduce((max, list) => Math.max(max, list.position), -1) + 1;
+    const theme = parseTheme(req.body?.theme);
+    const list = await prisma.noteList.create({ data: { name, position, theme } });
+    res.json(withTheme(list));
   } catch (error) {
     console.error('List create error:', error);
     res.status(500).json({ error: 'Failed to add the list' });
   }
 });
 
+// Put the chips in this order. Ids not listed keep their place after these.
+router.put('/lists/order', coupleAuth, async (req, res) => {
+  try {
+    const ids = parseIds(req.body?.ids);
+    if (!ids) return res.status(400).json({ error: 'That order does not look right' });
+
+    const lists = await ensureLists();
+    const known = new Set(lists.map((list) => list.id));
+    const ordered = [
+      ...ids.filter((id) => known.has(id)),
+      ...lists.map((list) => list.id).filter((id) => !ids.includes(id)),
+    ];
+    await prisma.$transaction(
+      ordered.map((id, position) => prisma.noteList.update({ where: { id }, data: { position } }))
+    );
+    res.json((await ensureLists()).map(withTheme));
+  } catch (error) {
+    console.error('List order error:', error);
+    res.status(500).json({ error: 'Failed to save the order' });
+  }
+});
+
 router.patch('/lists/:id', coupleAuth, async (req, res) => {
   try {
-    const name = parseListName(req.body?.name);
-    if (!name) return res.status(400).json({ error: 'Give the list a name' });
+    const data: { name?: string; theme?: Theme } = {};
+    if (req.body?.name !== undefined) {
+      const name = parseListName(req.body.name);
+      if (!name) return res.status(400).json({ error: 'Give the list a name' });
+      data.name = name;
+    }
+    if (req.body?.theme !== undefined) {
+      const theme = parseTheme(req.body.theme);
+      if (!theme) return res.status(400).json({ error: 'No such look' });
+      data.theme = theme;
+    }
+    if (!Object.keys(data).length) return res.status(400).json({ error: 'Nothing to change' });
 
-    const list = await prisma.noteList.update({ where: { id: req.params.id }, data: { name } });
-    res.json(list);
+    const list = await prisma.noteList.update({ where: { id: req.params.id }, data });
+    res.json(withTheme(list));
   } catch (error) {
-    console.error('List rename error:', error);
-    res.status(500).json({ error: 'Failed to rename the list' });
+    console.error('List update error:', error);
+    res.status(500).json({ error: 'Failed to change the list' });
   }
 });
 
@@ -199,7 +310,9 @@ router.delete('/lists/:id', coupleAuth, async (req, res) => {
 const FILLER = new Set(['i', 'we', 'you', 'the', 'a', 'an', 'my', 'our', 'that', 'it', 'to']);
 
 function deriveSpinLabel(body: string): string {
-  const words = body
+  const link = findLink(body);
+  if (link && !link.caption) return link.kind === 'video' ? 'video' : link.kind;
+  const words = (link ? link.caption : body)
     .trim()
     .split(/\s+/)
     .map((word) => word.replace(/[^\p{L}\p{N}'-]/gu, ''))
@@ -212,9 +325,17 @@ function deriveSpinLabel(body: string): string {
   return picked.join('\n').slice(0, 28);
 }
 
+// New notes go on top of their list
+async function topPosition(listId: string): Promise<number> {
+  const top = await prisma.note.aggregate({ where: { listId }, _min: { position: true } });
+  return (top._min.position ?? 1) - 1;
+}
+
 router.get('/notes', coupleAuth, async (_req, res) => {
   try {
-    const notes = await prisma.note.findMany({ orderBy: { createdAt: 'desc' } });
+    const notes = await prisma.note.findMany({
+      orderBy: [{ position: 'asc' }, { createdAt: 'desc' }],
+    });
     res.json(notes);
   } catch (error) {
     console.error('Notes fetch error:', error);
@@ -241,7 +362,7 @@ router.post('/notes', coupleAuth, async (req, res) => {
     const listId = lists.find((list) => list.id === asked)?.id ?? lists[0].id;
 
     const note = await prisma.note.create({
-      data: { body, photoUrl, spinLabel, listId },
+      data: { body, photoUrl, spinLabel, listId, position: await topPosition(listId) },
     });
     res.json(note);
   } catch (error) {
@@ -269,7 +390,18 @@ router.patch('/notes/:id', coupleAuth, async (req, res) => {
     }
     if (typeof req.body?.listId === 'string') {
       const lists = await ensureLists();
-      if (lists.some((list) => list.id === req.body.listId)) data.listId = req.body.listId;
+      if (lists.some((list) => list.id === req.body.listId)) {
+        // A note moved to another list arrives at the top of it
+        data.listId = req.body.listId;
+        data.position = await topPosition(req.body.listId);
+      }
+    }
+    for (const key of ['mapX', 'mapY'] as const) {
+      const value = req.body?.[key];
+      if (value === null) data[key] = null;
+      else if (typeof value === 'number' && Number.isFinite(value)) {
+        data[key] = Math.min(1, Math.max(0, value));
+      }
     }
 
     if (!Object.keys(data).length) {
@@ -281,6 +413,34 @@ router.patch('/notes/:id', coupleAuth, async (req, res) => {
   } catch (error) {
     console.error('Note update error:', error);
     res.status(500).json({ error: 'Failed to update note' });
+  }
+});
+
+// Put one list's notes in this order, in one request
+router.put('/notes/order', coupleAuth, async (req, res) => {
+  try {
+    const ids = parseIds(req.body?.ids);
+    const listId = typeof req.body?.listId === 'string' ? req.body.listId : null;
+    if (!ids || !listId) return res.status(400).json({ error: 'That order does not look right' });
+
+    const notes = await prisma.note.findMany({
+      where: { listId },
+      orderBy: [{ position: 'asc' }, { createdAt: 'desc' }],
+      select: { id: true },
+    });
+    const known = new Set(notes.map((note) => note.id));
+    // A note added on the other phone mid-drag keeps its place at the end
+    const ordered = [
+      ...ids.filter((id) => known.has(id)),
+      ...notes.map((note) => note.id).filter((id) => !ids.includes(id)),
+    ];
+    await prisma.$transaction(
+      ordered.map((id, position) => prisma.note.update({ where: { id }, data: { position } }))
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Note order error:', error);
+    res.status(500).json({ error: 'Failed to save the order' });
   }
 });
 
@@ -308,11 +468,20 @@ router.get('/settings', coupleAuth, async (_req, res) => {
   try {
     const settings = await prisma.coupleSettings.findUnique({ where: { id: 'main' } });
     if (!settings) {
-      return res.json({ id: 'main', ...DEFAULTS, anniversary: null, nextDate: null });
+      return res.json({
+        id: 'main',
+        ...DEFAULTS,
+        anniversary: null,
+        nextDate: null,
+        photoViewer: null,
+        dateView: null,
+      });
     }
-    // A row saved before the names existed still answers with something
+    // A row saved before the names existed still answers with something.
+    // The password hash never leaves the server.
+    const { passwordHash: _hash, ...visible } = settings;
     res.json({
-      ...settings,
+      ...visible,
       nameOne: settings.nameOne || DEFAULTS.nameOne,
       nameTwo: settings.nameTwo || DEFAULTS.nameTwo,
     });
@@ -344,6 +513,30 @@ router.put('/settings', coupleAuth, async (req, res) => {
   } catch (error) {
     console.error('Settings update error:', error);
     res.status(500).json({ error: 'Failed to save settings' });
+  }
+});
+
+// How photos open and how dates are shown. Its own route, so changing a view
+// can never touch the names or the anniversary.
+const PHOTO_VIEWERS = ['stack', 'film', 'polaroids'];
+const DATE_VIEWS = ['thread', 'book', 'calendar'];
+
+router.put('/settings/views', coupleAuth, async (req, res) => {
+  try {
+    const data: { photoViewer?: string; dateView?: string } = {};
+    if (PHOTO_VIEWERS.includes(req.body?.photoViewer)) data.photoViewer = req.body.photoViewer;
+    if (DATE_VIEWS.includes(req.body?.dateView)) data.dateView = req.body.dateView;
+    if (!Object.keys(data).length) return res.status(400).json({ error: 'Nothing to change' });
+
+    await prisma.coupleSettings.upsert({
+      where: { id: 'main' },
+      update: data,
+      create: { id: 'main', ...data },
+    });
+    res.json(data);
+  } catch (error) {
+    console.error('Views update error:', error);
+    res.status(500).json({ error: 'Failed to save that' });
   }
 });
 
@@ -393,5 +586,7 @@ router.get('/photo/:id', async (req, res) => {
     res.status(500).end();
   }
 });
+
+router.use('/dates', datesRouter);
 
 export default router;
