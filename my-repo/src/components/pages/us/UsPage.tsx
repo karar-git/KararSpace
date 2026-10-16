@@ -1,10 +1,31 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { ChangeEvent, CSSProperties, FormEvent } from 'react';
+import type { CSSProperties, FormEvent } from 'react';
 import './us.css';
-import { Heart, HeartOutline, ArrowUp, CameraIcon } from './icons';
-import NoteSlider from './NoteSlider';
+import './us2.css';
+import { Heart, HeartOutline } from './icons';
 import NotePanel from './NotePanel';
 import Wheel from './Wheel';
+import { Segmented } from './bits';
+import type { NoteActions } from './NoteSheet';
+import DeckView from './views/DeckView';
+import ArrangeView from './views/ArrangeView';
+import FutureView from './views/FutureView';
+import PlacesView from './views/PlacesView';
+import RitualView from './views/RitualView';
+import DatesView from './dates/DatesView';
+import DateEditor from './dates/DateEditor';
+import PhotoViewer from './dates/PhotoViewer';
+import { dateNumbers, nextNumber } from './dates/shared';
+import { dragging } from './useReorder';
+import {
+  AUTHOR_NAME,
+  EMPTY_SCORES,
+  getMe,
+  hasScores,
+  saveRitual,
+  setMe as rememberMe,
+  type RitualDraft,
+} from './people';
 import { daysBetween, prettyDate, toDateInput } from './dates';
 import {
   LockedError,
@@ -16,26 +37,45 @@ import {
   deleteNote,
   getSettings,
   getToken,
+  importDates,
+  listDates,
   listLists,
   listNotes,
-  photoSrc,
-  renameList,
+  reorderDates,
+  reorderLists,
+  reorderNotes,
+  saveDatePhotos,
+  saveDateRatings,
   saveSettings,
+  saveViews,
   setToken,
   unlock,
+  updateList,
   updateNote,
-  uploadPhoto,
+  type Author,
+  type DateView,
   type Note,
   type NoteList,
+  type PhotoViewer as PhotoViewerKind,
   type Settings,
+  type Theme,
+  type UsDate,
+  type Views,
 } from './api';
 
-type Screen = 'list' | 'spin' | 'done';
+type Screen = 'list' | 'spin' | 'done' | 'arrange';
 
 const POLL_MS = 7000;
 const LIST_KEY = 'us:list';
 const MAX_SEGMENTS = 6;
 const DEFAULT_NAMES = { nameOne: 'karar', nameTwo: 'dania' };
+const FONTS =
+  'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Quicksand:wght@400;500;600;700' +
+  '&family=Amiri:ital,wght@0,400;0,700;1,400&family=Tajawal:wght@400;500;700' +
+  '&family=Caveat:wght@500;600&family=Aref+Ruqaa:wght@400;700&display=swap';
+
+const byPosition = (a: { position: number; createdAt: string }, b: { position: number; createdAt: string }) =>
+  a.position - b.position || b.createdAt.localeCompare(a.createdAt);
 
 /* ------------------------------------------------------------------ */
 
@@ -128,7 +168,7 @@ function DayCounter({
     <div className="us-counter">
       <div className="us-counter-left">
         <div className="us-heartnum">
-          <HeartOutline />
+          <HeartOutline color="var(--card-border-active)" />
           <b style={days !== null && days > 999 ? { fontSize: 25 } : undefined}>
             {days === null ? '—' : days}
           </b>
@@ -146,94 +186,6 @@ function DayCounter({
       <div className="us-counter-right">
         <div className="us-eyebrow">next one</div>
         <p>{settings?.nextDate || 'soon'}</p>
-      </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-
-function AddRow({
-  onAdd,
-  onError,
-}: {
-  onAdd: (body: string, photoUrl: string | null) => Promise<void>;
-  onError: (message: string) => void;
-}) {
-  const [body, setBody] = useState('');
-  const [photo, setPhoto] = useState<{ url: string; preview: string } | null>(null);
-  const [busy, setBusy] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const pickPhoto = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-    setBusy(true);
-    try {
-      const url = await uploadPhoto(file);
-      setPhoto({ url, preview: url });
-    } catch (err) {
-      onError((err as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const submit = async () => {
-    if (!body.trim() || busy) return;
-    setBusy(true);
-    try {
-      await onAdd(body.trim(), photo?.url ?? null);
-      setBody('');
-      setPhoto(null);
-    } catch (err) {
-      onError((err as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="us-add">
-      <textarea
-        placeholder="add a note to the list…"
-        value={body}
-        rows={2}
-        onChange={(event) => setBody(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) submit();
-        }}
-      />
-      <div className="us-add-row">
-        {photo ? (
-          <button type="button" className="us-chip on" onClick={() => setPhoto(null)}>
-            <img className="us-thumb" src={photoSrc(photo.preview)} alt="" />
-            remove
-          </button>
-        ) : (
-          <button type="button" className="us-chip" onClick={() => fileRef.current?.click()}>
-            <CameraIcon />
-            photo
-          </button>
-        )}
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={pickPhoto}
-        />
-
-        <button
-          type="button"
-          className="us-add-send"
-          aria-label="add note"
-          disabled={!body.trim() || busy}
-          onClick={submit}
-        >
-          <ArrowUp />
-        </button>
       </div>
     </div>
   );
@@ -452,10 +404,33 @@ function SettingsModal({
 
 /* ------------------------------------------------------------------ */
 
+function WhoAreYou({ onPick }: { onPick: (author: Author) => void }) {
+  return (
+    <div className="us-modal">
+      <div className="us-modal-card us2-who">
+        <Heart size={30} fill="var(--accent)" className="us-beat" />
+        <h3>who are you?</h3>
+        <p>so your notes and hearts land on your side. this phone remembers.</p>
+        <div className="us-panel-actions" style={{ justifyContent: 'center' }}>
+          <button type="button" className="us-pill filled" onClick={() => onPick('karar')}>
+            {AUTHOR_NAME.karar}
+          </button>
+          <button type="button" className="us-pill filled dania" onClick={() => onPick('dania')}>
+            {AUTHOR_NAME.dania}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
 export default function UsPage() {
   const [unlocked, setUnlocked] = useState<boolean | null>(null);
   const [allNotes, setAllNotes] = useState<Note[]>([]);
   const [lists, setLists] = useState<NoteList[]>([]);
+  const [dates, setDates] = useState<UsDate[]>([]);
   const [activeListId, setActiveListId] = useState<string | null>(() => {
     try {
       return localStorage.getItem(LIST_KEY);
@@ -464,11 +439,14 @@ export default function UsPage() {
     }
   });
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [views, setViews] = useState<Views>({ photoViewer: null, dateView: null });
   const [screen, setScreen] = useState<Screen>('list');
-  const [activeIndex, setActiveIndex] = useState(0);
   const [result, setResult] = useState<Note | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [me, setMe] = useState<Author | null>(getMe);
+  const [editor, setEditor] = useState<{ date: UsDate | null; ritual: boolean; day?: string } | null>(null);
+  const [viewer, setViewer] = useState<{ dateId: string; index: number } | null>(null);
 
   // Keep this page out of search engines and off the site's usual title
   useEffect(() => {
@@ -477,10 +455,11 @@ export default function UsPage() {
     meta.content = 'noindex, nofollow, noarchive';
     document.head.appendChild(meta);
 
+    // The serif and UI fonts have no Arabic letters; Amiri, Tajawal and
+    // Aref Ruqaa cover those so notes do not fall back to the phone's default
     const fonts = document.createElement('link');
     fonts.rel = 'stylesheet';
-    fonts.href =
-      'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Quicksand:wght@400;500;600;700&display=swap';
+    fonts.href = FONTS;
     document.head.appendChild(fonts);
 
     const previousTitle = document.title;
@@ -520,24 +499,46 @@ export default function UsPage() {
       .catch(() => setUnlocked(false));
   }, []);
 
-  // While a write is in flight, let the optimistic state stand
+  // While a write or a drag is in flight, let the optimistic state stand
   const writing = useRef(0);
 
   const refresh = useCallback(async () => {
-    if (writing.current > 0) return;
+    if (writing.current > 0 || dragging.active) return;
     try {
-      const [freshNotes, freshSettings, freshLists] = await Promise.all([
+      const [freshNotes, freshSettings, freshLists, freshDates] = await Promise.all([
         listNotes(),
         getSettings(),
         listLists(),
+        listDates(),
       ]);
+      if (writing.current > 0 || dragging.active) return;
       setAllNotes(freshNotes);
       setSettings(freshSettings);
+      setViews({ photoViewer: freshSettings.photoViewer, dateView: freshSettings.dateView });
       setLists(freshLists);
+      setDates(freshDates);
     } catch (err) {
       handleError(err);
     }
   }, [handleError]);
+
+  /** Run a write with the polling loop held off, and re-read if it fails */
+  const write = useCallback(
+    async (task: () => Promise<unknown>) => {
+      writing.current += 1;
+      try {
+        await task();
+      } catch (err) {
+        handleError(err);
+        writing.current -= 1;
+        refresh();
+        return false;
+      }
+      writing.current -= 1;
+      return true;
+    },
+    [handleError, refresh]
+  );
 
   // Two phones, one list — poll while the tab is open
   useEffect(() => {
@@ -559,10 +560,23 @@ export default function UsPage() {
     () => lists.find((list) => list.id === activeListId) ?? lists[0] ?? null,
     [lists, activeListId]
   );
+  const theme: Theme = activeList?.theme ?? 'deck';
 
-  // Everything below this line works on one list at a time
+  // The list "plan it" and "add to a date" send things to
+  const deckList = useMemo(
+    () =>
+      lists.find((list) => list.theme === 'deck' && list.name === 'the date list') ??
+      lists.find((list) => list.theme === 'deck') ??
+      null,
+    [lists]
+  );
+
+  // Everything below this line works on one list at a time, top first
   const notes = useMemo(
-    () => (activeList ? allNotes.filter((note) => note.listId === activeList.id) : []),
+    () =>
+      activeList
+        ? allNotes.filter((note) => note.listId === activeList.id).sort(byPosition)
+        : [],
     [allNotes, activeList]
   );
 
@@ -571,110 +585,45 @@ export default function UsPage() {
     allNotes.forEach((note) => {
       if (note.listId && !note.done) counts[note.listId] = (counts[note.listId] ?? 0) + 1;
     });
+    lists.forEach((list) => {
+      if (list.theme === 'dates') counts[list.id] = dates.length;
+    });
     return counts;
-  }, [allNotes]);
+  }, [allNotes, lists, dates.length]);
 
   const open = useMemo(() => notes.filter((note) => !note.done), [notes]);
   const doneNotes = useMemo(() => notes.filter((note) => note.done), [notes]);
 
-  // Up to six segments: the ones still waiting first, then hearted ones to fill
-  const segments = useMemo(() => {
-    const waiting = [...open].reverse();
-    return [...waiting, ...doneNotes].slice(0, MAX_SEGMENTS);
-  }, [open, doneNotes]);
+  // Up to six segments: what comes up next first, then hearted ones to fill
+  const segments = useMemo(
+    () => [...open, ...doneNotes].slice(0, MAX_SEGMENTS),
+    [open, doneNotes]
+  );
 
-  useEffect(() => {
-    if (activeIndex > notes.length - 1) setActiveIndex(Math.max(0, notes.length - 1));
-  }, [notes.length, activeIndex]);
-
-  const activeNote = notes[activeIndex] ?? null;
   const names = {
     nameOne: settings?.nameOne || DEFAULT_NAMES.nameOne,
     nameTwo: settings?.nameTwo || DEFAULT_NAMES.nameTwo,
   };
 
-  const toggleDone = async (note: Note) => {
+  const needsMe = !me && (theme === 'dates' || theme === 'ritual');
+
+  /* ---- notes ---- */
+
+  const patchLocal = (id: string, patch: Partial<Note>) =>
+    setAllNotes((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+
+  const toggleDone = (note: Note) => {
     const next = !note.done;
     // Optimistic — the heart should fill the instant it is tapped
-    setAllNotes((current) =>
-      current.map((item) =>
-        item.id === note.id
-          ? { ...item, done: next, doneAt: next ? new Date().toISOString() : null }
-          : item
-      )
-    );
+    patchLocal(note.id, { done: next, doneAt: next ? new Date().toISOString() : null });
     setResult((current) => (current && current.id === note.id ? { ...current, done: next } : current));
-    writing.current += 1;
-    try {
-      await updateNote(note.id, { done: next });
-    } catch (err) {
-      handleError(err);
-      refresh();
-    } finally {
-      writing.current -= 1;
-    }
+    write(() => updateNote(note.id, { done: next }));
   };
 
-  const add = async (body: string, photoUrl: string | null) => {
-    const note = await addNote({ body, photoUrl, listId: activeList?.id ?? null });
+  const add = async (body: string, photoUrl: string | null, listId = activeList?.id ?? null) => {
+    const note = await addNote({ body, photoUrl, listId });
     setAllNotes((current) => [note, ...current]);
-    setActiveIndex(0);
-  };
-
-  const chooseList = (id: string) => {
-    setActiveListId(id);
-    setActiveIndex(0);
-    setResult(null);
-    try {
-      localStorage.setItem(LIST_KEY, id);
-    } catch {
-      /* private mode — it just will not be remembered */
-    }
-  };
-
-  const createList = async () => {
-    const name = window.prompt('name for the new list');
-    if (name === null || !name.trim()) return;
-    try {
-      const created = await addList(name.trim());
-      setLists((current) => [...current, created]);
-      chooseList(created.id);
-      setScreen('list');
-    } catch (err) {
-      handleError(err);
-    }
-  };
-
-  const renameActiveList = async () => {
-    if (!activeList) return;
-    const name = window.prompt('rename this list', activeList.name);
-    if (name === null || !name.trim()) return;
-    try {
-      const updated = await renameList(activeList.id, name.trim());
-      setLists((current) => current.map((list) => (list.id === updated.id ? updated : list)));
-    } catch (err) {
-      handleError(err);
-    }
-  };
-
-  const removeActiveList = async () => {
-    if (!activeList || lists.length < 2) return;
-    const count = notes.length;
-    const question = count
-      ? `remove "${activeList.name}" and its ${count} note${count === 1 ? '' : 's'}?`
-      : `remove "${activeList.name}"?`;
-    if (!window.confirm(question)) return;
-
-    const gone = activeList.id;
-    try {
-      await deleteList(gone);
-      const rest = lists.filter((list) => list.id !== gone);
-      setAllNotes((current) => current.filter((note) => note.listId !== gone));
-      setLists(rest);
-      chooseList(rest[0].id);
-    } catch (err) {
-      handleError(err);
-    }
+    return note;
   };
 
   const remove = async (note: Note) => {
@@ -701,6 +650,222 @@ export default function UsPage() {
     }
   };
 
+  const editBody = async (note: Note) => {
+    const next = window.prompt('change this note', note.body);
+    if (next === null || !next.trim() || next.trim() === note.body) return;
+    try {
+      const updated = await updateNote(note.id, { body: next.trim() });
+      setAllNotes((all) => all.map((item) => (item.id === updated.id ? updated : item)));
+    } catch (err) {
+      handleError(err);
+    }
+  };
+
+  const actions: NoteActions = {
+    onToggleDone: toggleDone,
+    onDelete: remove,
+    onEditLabel: editLabel,
+    onEditBody: editBody,
+  };
+
+  const arrangeNotes = (next: Note[]) => {
+    if (!activeList) return;
+    const position = new Map(next.map((note, index) => [note.id, index]));
+    setAllNotes((current) =>
+      current.map((note) => (position.has(note.id) ? { ...note, position: position.get(note.id)! } : note))
+    );
+    write(() => reorderNotes(activeList.id, next.map((note) => note.id)));
+  };
+
+  // "plan it": a someday moves to the top of the date list
+  const plan = (note: Note) => {
+    if (!deckList) return;
+    const top = Math.min(0, ...allNotes.filter((n) => n.listId === deckList.id).map((n) => n.position)) - 1;
+    patchLocal(note.id, { listId: deckList.id, position: top });
+    showToast(`moved to ${deckList.name}`);
+    write(() => updateNote(note.id, { listId: deckList.id }));
+  };
+
+  const copyToDates = async (note: Note) => {
+    if (!deckList) return;
+    try {
+      await add(note.body, note.photoUrl, deckList.id);
+      showToast(`added to ${deckList.name}`);
+    } catch (err) {
+      handleError(err);
+    }
+  };
+
+  const addPlace = async (body: string, at: [number, number]) => {
+    try {
+      const note = await add(body, null);
+      patchLocal(note.id, { mapX: at[0], mapY: at[1] });
+      await updateNote(note.id, { mapX: at[0], mapY: at[1] });
+    } catch (err) {
+      handleError(err);
+    }
+  };
+
+  const movePin = (note: Note, at: [number, number]) => {
+    patchLocal(note.id, { mapX: at[0], mapY: at[1] });
+    write(() => updateNote(note.id, { mapX: at[0], mapY: at[1] }));
+  };
+
+  /* ---- lists ---- */
+
+  const chooseList = (id: string) => {
+    setActiveListId(id);
+    setResult(null);
+    setScreen('list');
+    try {
+      localStorage.setItem(LIST_KEY, id);
+    } catch {
+      /* private mode — it just will not be remembered */
+    }
+  };
+
+  const createList = async () => {
+    const name = window.prompt('name for the new list');
+    if (name === null || !name.trim()) return;
+    try {
+      const created = await addList(name.trim());
+      setLists((current) => [...current, created]);
+      chooseList(created.id);
+    } catch (err) {
+      handleError(err);
+    }
+  };
+
+  const renameActiveList = async () => {
+    if (!activeList) return;
+    const name = window.prompt('rename this list', activeList.name);
+    if (name === null || !name.trim()) return;
+    try {
+      const updated = await updateList(activeList.id, { name: name.trim() });
+      setLists((current) => current.map((list) => (list.id === updated.id ? updated : list)));
+    } catch (err) {
+      handleError(err);
+    }
+  };
+
+  const setActiveTheme = (next: Theme) => {
+    if (!activeList) return;
+    setLists((current) => current.map((list) => (list.id === activeList.id ? { ...list, theme: next } : list)));
+    write(() => updateList(activeList.id, { theme: next }));
+  };
+
+  const arrangeLists = (next: NoteList[]) => {
+    setLists(next.map((list, position) => ({ ...list, position })));
+    write(() => reorderLists(next.map((list) => list.id)));
+  };
+
+  const removeActiveList = async () => {
+    if (!activeList || lists.length < 2) return;
+    const count = notes.length;
+    const question = count
+      ? `remove "${activeList.name}" and its ${count} note${count === 1 ? '' : 's'}?`
+      : `remove "${activeList.name}"?`;
+    if (!window.confirm(question)) return;
+
+    const gone = activeList.id;
+    try {
+      await deleteList(gone);
+      const rest = lists.filter((list) => list.id !== gone);
+      setAllNotes((current) => current.filter((note) => note.listId !== gone));
+      setLists(rest);
+      chooseList(rest[0].id);
+    } catch (err) {
+      handleError(err);
+    }
+  };
+
+  /* ---- dates ---- */
+
+  const numbers = useMemo(() => dateNumbers(dates), [dates]);
+
+  // A "dates" list whose notes were never copied into real dates. Copying only
+  // reads them; the notes themselves are never changed.
+  const importable = useMemo(() => {
+    const copied = new Set(dates.map((date) => date.sourceNoteId).filter(Boolean));
+    const pending = lists.filter(
+      (list) =>
+        list.theme === 'dates' &&
+        !allNotes.some((note) => note.listId === list.id && copied.has(note.id))
+    );
+    return allNotes.filter((note) => pending.some((list) => list.id === note.listId));
+  }, [allNotes, dates, lists]);
+
+  const runImport = async () => {
+    const targets = lists.filter((list) => importable.some((note) => note.listId === list.id));
+    try {
+      let added = 0;
+      for (const list of targets) {
+        const result = await importDates(list.id);
+        added += result.added;
+        setDates(result.dates);
+      }
+      showToast(added ? `${added} dates brought over` : 'nothing new to bring over');
+    } catch (err) {
+      handleError(err);
+    }
+  };
+
+  const arrangeDates = (next: UsDate[], placed?: string) => {
+    setDates(
+      next.map((date, position) => ({
+        ...date,
+        position,
+        numbered: date.id === placed ? true : date.numbered,
+      }))
+    );
+    write(async () => setDates(await reorderDates(next.map((date) => date.id), placed)));
+  };
+
+  const pickView = (patch: Partial<Views>) => {
+    setViews((current) => ({ ...current, ...patch }));
+    write(() => saveViews(patch));
+  };
+
+  const pickMe = (author: Author) => {
+    rememberMe(author);
+    setMe(author);
+  };
+
+  // After a night is rated: the checklist starts fresh for the next date
+  const resetRitual = async () => {
+    const ritualIds = new Set(lists.filter((list) => list.theme === 'ritual').map((list) => list.id));
+    const checked = allNotes.filter((note) => note.done && note.listId && ritualIds.has(note.listId));
+    checked.forEach((note) => patchLocal(note.id, { done: false, doneAt: null }));
+    await Promise.all(checked.map((note) => updateNote(note.id, { done: false })));
+  };
+
+  const saveRitualTo = async (date: UsDate, draft: RitualDraft) => {
+    for (const author of ['karar', 'dania'] as Author[]) {
+      if (hasScores(draft[author])) await saveDateRatings(date.id, author, draft[author]);
+    }
+    await resetRitual();
+    setDates(await listDates());
+    showToast(`saved to ${date.place}`);
+  };
+
+  const viewerDate = viewer ? dates.find((date) => date.id === viewer.dateId) ?? null : null;
+
+  const setCaption = (index: number, caption: string) => {
+    if (!viewerDate) return;
+    const photos = viewerDate.photos.map((photo, i) =>
+      i === index ? { url: photo.url, caption: caption.trim() || null } : { url: photo.url, caption: photo.caption }
+    );
+    setDates((current) =>
+      current.map((date) => (date.id === viewerDate.id ? { ...date, photos } : date))
+    );
+    write(async () => {
+      const updated = await saveDatePhotos(viewerDate.id, photos);
+      setDates((current) => current.map((date) => (date.id === updated.id ? updated : date)));
+    });
+  };
+
+  /* ---- render ---- */
+
   if (unlocked === null) {
     return (
       <div className="us-root">
@@ -714,116 +879,129 @@ export default function UsPage() {
 
   if (!unlocked) return <LockScreen onUnlocked={() => setUnlocked(true)} />;
 
+  const editorNumber = editor
+    ? editor.date
+      ? numbers.get(editor.date.id) ?? '؟'
+      : nextNumber(dates)
+    : '';
+
   return (
-    <div className="us-root">
-      <BackgroundHearts />
+    <div className="us-root" data-theme={theme}>
+      {theme === 'deck' && <BackgroundHearts />}
 
-      <div className="us-shell">
-        <header className="us-header">
-          <button
-            type="button"
-            className="us-wordmark"
-            title="change our names"
-            onClick={() => setShowSettings(true)}
-          >
-            {names.nameOne}
-            <Heart size={20} fill="var(--accent)" className="us-beat" />
-            {names.nameTwo}
-          </button>
-          <nav className="us-nav">
+      <div className="us-shell us2-shell">
+        <div className="us2-top">
+          <header className="us-header">
             <button
               type="button"
-              className={screen === 'list' ? 'on' : ''}
-              onClick={() => setScreen('list')}
+              className="us-wordmark"
+              title="change our names"
+              onClick={() => setShowSettings(true)}
             >
-              the list
+              {names.nameOne}
+              <Heart size={13} fill="var(--heart)" className="us-beat" />
+              {names.nameTwo}
             </button>
-            <button
-              type="button"
-              className={screen === 'spin' ? 'on' : ''}
-              onClick={() => setScreen('spin')}
-            >
-              spin it
+          </header>
+
+          <ListBar
+            lists={lists}
+            activeId={activeList?.id ?? null}
+            counts={listCounts}
+            onPick={chooseList}
+            onNew={createList}
+          />
+        </div>
+
+        {activeList && screen === 'arrange' && (
+          <ArrangeView
+            list={activeList}
+            notes={notes}
+            lists={lists}
+            onReorderNotes={arrangeNotes}
+            onReorderLists={arrangeLists}
+            onTheme={setActiveTheme}
+            onRename={renameActiveList}
+            onRemove={lists.length > 1 ? removeActiveList : null}
+            onDone={() => setScreen('list')}
+          />
+        )}
+
+        {activeList && screen === 'list' && theme === 'deck' && (
+          <DeckView
+            list={activeList}
+            notes={notes}
+            actions={actions}
+            onAdd={async (body, photoUrl) => {
+              await add(body, photoUrl);
+            }}
+            onError={showToast}
+            onSpin={() => setScreen('spin')}
+            onArrange={() => setScreen('arrange')}
+            onShowDone={() => setScreen('done')}
+          />
+        )}
+
+        {activeList && screen === 'list' && theme === 'someday' && (
+          <FutureView
+            notes={notes}
+            planTarget={deckList && deckList.id !== activeList.id ? deckList : null}
+            actions={actions}
+            onPlan={plan}
+            onAdd={async (body, photoUrl) => {
+              await add(body, photoUrl);
+            }}
+            onError={showToast}
+          />
+        )}
+
+        {activeList && screen === 'list' && theme === 'places' && (
+          <PlacesView
+            notes={notes}
+            dateList={deckList && deckList.id !== activeList.id ? deckList : null}
+            actions={actions}
+            onAdd={addPlace}
+            onMove={movePin}
+            onCopyToDates={copyToDates}
+          />
+        )}
+
+        {activeList && screen === 'list' && theme === 'ritual' && me && (
+          <RitualView
+            notes={notes}
+            me={me}
+            dates={dates}
+            actions={actions}
+            onAdd={async (body) => {
+              await add(body, null);
+            }}
+            onError={showToast}
+            onSave={saveRitualTo}
+            onNewDate={() => setEditor({ date: null, ritual: true })}
+          />
+        )}
+
+        {activeList && screen === 'list' && theme === 'dates' && me && (
+          <DatesView
+            dates={dates}
+            me={me}
+            view={views.dateView ?? 'thread'}
+            anniversary={settings?.anniversary ?? null}
+            importCount={importable.length}
+            onImport={runImport}
+            onView={(dateView: DateView) => pickView({ dateView })}
+            onEdit={(date, day) => setEditor({ date, ritual: false, day })}
+            onPhotos={(date, index) => setViewer({ dateId: date.id, index })}
+            onReorder={arrangeDates}
+          />
+        )}
+
+        {screen !== 'list' && screen !== 'arrange' && (
+          <div className="us2-backrow">
+            <button type="button" className="us2-sublink strong" onClick={() => setScreen('list')}>
+              ← back to {activeList?.name ?? 'the list'}
             </button>
-            <button
-              type="button"
-              className={screen === 'done' ? 'on' : ''}
-              onClick={() => setScreen('done')}
-            >
-              done
-              <span className="us-nav-badge">{doneNotes.length}</span>
-            </button>
-          </nav>
-        </header>
-
-        <ListBar
-          lists={lists}
-          activeId={activeList?.id ?? null}
-          counts={listCounts}
-          onPick={chooseList}
-          onNew={createList}
-        />
-
-        <DayCounter settings={settings} onEdit={() => setShowSettings(true)} />
-
-        {screen === 'list' && (
-          <>
-            <div className="us-section">
-              <h2>{activeList?.name ?? 'our list'}</h2>
-              <div className="us-progress">
-                {open.length} to go · {doneNotes.length} talked about
-                {activeList && (
-                  <>
-                    {' · '}
-                    <button type="button" className="us-linkish" onClick={renameActiveList}>
-                      rename
-                    </button>
-                    {lists.length > 1 && (
-                      <>
-                        {' · '}
-                        <button type="button" className="us-linkish" onClick={removeActiveList}>
-                          remove list
-                        </button>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-
-            {notes.length === 0 ? (
-              <div className="us-empty">
-                <Heart size={26} fill="var(--card-border-active)" />
-                <p>nothing here yet. add the first one.</p>
-              </div>
-            ) : (
-              <>
-                <NoteSlider
-                  notes={notes}
-                  activeIndex={Math.min(activeIndex, notes.length - 1)}
-                  onSelect={setActiveIndex}
-                  onToggleDone={toggleDone}
-                />
-                {activeNote && (
-                  <NotePanel
-                    note={activeNote}
-                    onToggleDone={toggleDone}
-                    onDelete={remove}
-                    onEditLabel={editLabel}
-                  />
-                )}
-              </>
-            )}
-
-            <AddRow onAdd={add} onError={showToast} />
-
-            <div className="us-panel-actions" style={{ justifyContent: 'center' }}>
-              <button type="button" className="us-pill" onClick={() => setScreen('spin')}>
-                <Heart size={13} fill="var(--accent)" />
-                can't decide? spin it
-              </button>
-            </div>
-          </>
+          </div>
         )}
 
         {screen === 'spin' && (
@@ -854,12 +1032,6 @@ export default function UsPage() {
                 onToggleDone={toggleDone}
               />
             )}
-
-            <div className="us-panel-actions" style={{ justifyContent: 'center' }}>
-              <button type="button" className="us-pill ghost" onClick={() => setScreen('list')}>
-                back to the list
-              </button>
-            </div>
           </>
         )}
 
@@ -888,7 +1060,7 @@ export default function UsPage() {
                       <Heart size={20} fill="var(--accent)" />
                     </button>
                     <div>
-                      <p>{note.body}</p>
+                      <p dir="auto">{note.body}</p>
                       <small>
                         talked about{note.doneAt ? ` ${prettyDate(note.doneAt)}` : ''}
                       </small>
@@ -900,19 +1072,71 @@ export default function UsPage() {
           </>
         )}
 
-        <div className="us-panel-actions" style={{ justifyContent: 'center', marginTop: 30 }}>
-          <button
-            type="button"
-            className="us-pill ghost"
-            onClick={() => {
-              setToken(null);
-              setUnlocked(false);
-            }}
-          >
-            lock it again
-          </button>
-        </div>
+        <footer className="us2-foot">
+          <DayCounter settings={settings} onEdit={() => setShowSettings(true)} />
+          <div className="us-panel-actions" style={{ justifyContent: 'center' }}>
+            {me && (
+              <button
+                type="button"
+                className="us-pill ghost"
+                onClick={() => pickMe(me === 'karar' ? 'dania' : 'karar')}
+              >
+                this phone is {AUTHOR_NAME[me]} · switch
+              </button>
+            )}
+            <button
+              type="button"
+              className="us-pill ghost"
+              onClick={() => {
+                setToken(null);
+                setUnlocked(false);
+              }}
+            >
+              lock it again
+            </button>
+          </div>
+        </footer>
       </div>
+
+      {needsMe && screen === 'list' && <WhoAreYou onPick={pickMe} />}
+
+      {editor && me && (
+        <DateEditor
+          key={editor.date?.id ?? 'new'}
+          date={editor.date}
+          number={editorNumber}
+          me={me}
+          offerRitual={editor.ritual}
+          initialDay={editor.day ?? null}
+          onError={showToast}
+          onClose={() => setEditor(null)}
+          onDeleted={async () => {
+            setEditor(null);
+            setDates(await listDates());
+          }}
+          onSaved={async (usedRitual) => {
+            setEditor(null);
+            if (usedRitual) {
+              saveRitual({ karar: { ...EMPTY_SCORES }, dania: { ...EMPTY_SCORES } });
+              await resetRitual();
+            }
+            setDates(await listDates());
+            showToast('kept ♥');
+          }}
+        />
+      )}
+
+      {viewer && viewerDate && (
+        <PhotoViewer
+          date={viewerDate}
+          number={numbers.get(viewerDate.id) ?? '؟'}
+          kind={views.photoViewer ?? 'stack'}
+          startAt={Math.min(viewer.index, Math.max(0, viewerDate.photos.length - 1))}
+          onKind={(photoViewer: PhotoViewerKind) => pickView({ photoViewer })}
+          onCaption={setCaption}
+          onClose={() => setViewer(null)}
+        />
+      )}
 
       {showSettings && (
         <SettingsModal

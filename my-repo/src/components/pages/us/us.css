@@ -19,8 +19,10 @@
   --muted-light: #c9a3b4;
   --dim: #b48ea0;
 
-  --serif: "Instrument Serif", Georgia, serif;
-  --ui: "Quicksand", "Trebuchet MS", sans-serif;
+  /* The first fonts have no Arabic letters; the second ones cover them */
+  --serif: "Instrument Serif", "Amiri", Georgia, serif;
+  --ui: "Quicksand", "Tajawal", "Trebuchet MS", sans-serif;
+  --hand: "Caveat", "Aref Ruqaa", cursive;
   --shadow-active: 0 12px 28px rgba(214, 57, 107, 0.18);
 
   position: relative;

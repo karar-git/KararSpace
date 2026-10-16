@@ -109,7 +109,7 @@ export default function Wheel({ segments, onLanded, onSpinStart }: WheelProps) {
                 textAnchor="middle"
                 transform={`rotate(${centre + (flipped ? 180 : 0)} ${lx} ${ly})`}
                 fill={note.done ? 'var(--wheel-done-label)' : LABEL_COLORS[colorIndex]}
-                fontFamily="Quicksand, 'Trebuchet MS', sans-serif"
+                fontFamily="Quicksand, Tajawal, 'Trebuchet MS', sans-serif"
                 fontSize={14}
                 fontWeight={600}
               >
